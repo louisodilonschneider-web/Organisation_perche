@@ -1,0 +1,1833 @@
+<title>Régie Perche</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Public+Sans:wght@400;500;600;700&display=swap">
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
+<style>
+:root{
+  --bg:#FAF6EC;
+  --surface:#FFFFFF;
+  --surface-alt:#F3E8D6;
+  --surface-alt-line:#E3D2AF;
+  --line:#E3DCCB;
+  --ink:#2B2620;
+  --ink-dim:#6B6252;
+  --brown:#8A4B1E;
+  --amber:#C97A2B;
+  --amber-weak:#F3D9B8;
+  --teal:#2E6E5E;
+  --teal-weak:#D9EDE6;
+  --danger:#A6371E;
+  --danger-weak:#F3DCD3;
+  --status-blue:#DCEBF7;
+  --status-yellow:#FBF0C7;
+  --status-green:#DFF3E3;
+  --shadow:0 1px 2px rgba(43,38,32,.07),0 6px 18px rgba(43,38,32,.06);
+  --radius:10px;
+  --font-display:'Barlow Condensed',Arial Narrow,sans-serif;
+  --font-body:'Public Sans',Arial,Helvetica,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#1C1812;
+    --surface:#26211A;
+    --surface-alt:#332C20;
+    --surface-alt-line:#4A4130;
+    --line:#453C2C;
+    --ink:#F1E9DA;
+    --ink-dim:#C6BAA2;
+    --brown:#E3A55C;
+    --amber:#E0954A;
+    --amber-weak:#4A3820;
+    --teal:#63C6AC;
+    --teal-weak:#1F3C34;
+    --danger:#E08767;
+    --danger-weak:#4A2A20;
+    --status-blue:#223449;
+    --status-yellow:#453B1E;
+    --status-green:#1F3A2E;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 18px rgba(0,0,0,.35);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#1C1812;
+  --surface:#26211A;
+  --surface-alt:#332C20;
+  --surface-alt-line:#4A4130;
+  --line:#453C2C;
+  --ink:#F1E9DA;
+  --ink-dim:#C6BAA2;
+  --brown:#E3A55C;
+  --amber:#E0954A;
+  --amber-weak:#4A3820;
+  --teal:#63C6AC;
+  --teal-weak:#1F3C34;
+  --danger:#E08767;
+  --danger-weak:#4A2A20;
+  --status-blue:#223449;
+  --status-yellow:#453B1E;
+  --status-green:#1F3A2E;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 18px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box;}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--ink);
+  font-family:var(--font-body);
+  font-size:14.5px;
+  line-height:1.5;
+  display:flex;
+  min-height:100%;
+}
+h1,h2,h3{font-family:var(--font-display);font-weight:700;color:var(--brown);margin:0 0 4px;text-wrap:balance;}
+button,input,select,textarea{font-family:inherit;font-size:inherit;color:inherit;}
+a{color:var(--teal);}
+::selection{background:var(--amber-weak);}
+:focus-visible{outline:2px solid var(--teal);outline-offset:2px;}
+
+/* ---------- layout ---------- */
+.app{display:flex;width:100%;min-height:100vh;}
+.sidebar{
+  width:246px;flex:none;background:var(--surface-alt);
+  border-right:1px solid var(--surface-alt-line);
+  padding:18px 14px 18px;
+  position:sticky;top:0;align-self:flex-start;height:100vh;overflow-y:auto;
+}
+.brand{padding:6px 8px 16px;border-bottom:1px solid var(--surface-alt-line);margin-bottom:14px;}
+.brand .eyebrow{font-family:var(--font-display);font-weight:600;letter-spacing:.08em;text-transform:uppercase;font-size:11.5px;color:var(--brown);opacity:.85;}
+.brand h1{font-size:26px;line-height:1.05;margin-top:2px;}
+.brand .sub{font-size:12px;color:var(--ink-dim);margin-top:3px;}
+nav.mainnav{display:flex;flex-direction:column;gap:2px;}
+nav.mainnav button{
+  display:flex;align-items:center;gap:9px;text-align:left;
+  background:transparent;border:0;border-radius:8px;padding:9px 10px;
+  cursor:pointer;color:var(--ink);font-weight:500;font-size:14px;
+}
+nav.mainnav button .dot{width:7px;height:7px;border-radius:50%;background:var(--surface-alt-line);flex:none;}
+nav.mainnav button:hover{background:rgba(0,0,0,.05)}
+nav.mainnav button[aria-current="true"]{background:var(--surface);box-shadow:var(--shadow);font-weight:700;color:var(--brown);}
+nav.mainnav button[aria-current="true"] .dot{background:var(--amber);}
+.sidebar-foot{margin-top:16px;padding-top:14px;border-top:1px solid var(--surface-alt-line);font-size:11.5px;color:var(--ink-dim);}
+
+.main{flex:1;min-width:0;padding:26px 32px 60px;}
+.view{max-width:1180px;}
+.view[hidden]{display:none;}
+.view-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:18px;}
+.view-head h2{font-size:26px;}
+.view-head p{margin:2px 0 0;color:var(--ink-dim);font-size:13.5px;max-width:56ch;}
+.view-head .actions{display:flex;gap:8px;flex-wrap:wrap;}
+
+/* ---------- primitives ---------- */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px 20px;}
+.card + .card{margin-top:16px;}
+.card h3{font-size:19px;margin-bottom:2px;}
+.card .card-sub{font-size:12.5px;color:var(--ink-dim);margin-bottom:12px;}
+.grid{display:grid;gap:14px;}
+.grid.stat-row{grid-template-columns:repeat(4,1fr);}
+.grid.two{grid-template-columns:1.1fr .9fr;align-items:start;}
+@media (max-width:900px){.grid.stat-row{grid-template-columns:repeat(2,1fr);}.grid.two{grid-template-columns:1fr;}}
+
+.stat-tile{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px 16px;}
+.stat-tile .label{font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-dim);font-weight:600;}
+.stat-tile .value{font-family:var(--font-display);font-size:34px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.05;margin-top:4px;color:var(--ink);}
+.stat-tile .value small{font-family:var(--font-body);font-size:14px;color:var(--ink-dim);font-weight:500;}
+.stat-tile.accent .value{color:var(--brown);}
+.stat-tile.warn{border-color:var(--danger);}
+.stat-tile.warn .value{color:var(--danger);}
+
+button.btn{
+  background:var(--ink);color:var(--bg);border:1px solid var(--ink);
+  border-radius:8px;padding:8px 14px;font-weight:600;font-size:13.5px;cursor:pointer;
+}
+button.btn.primary{background:var(--amber);border-color:var(--amber);color:#2A1B0C;}
+button.btn.ghost{background:transparent;color:var(--ink);border-color:var(--line);}
+button.btn.danger{background:transparent;color:var(--danger);border-color:var(--danger-weak);}
+button.btn.small{padding:5px 10px;font-size:12.5px;border-radius:7px;}
+button.btn:hover{filter:brightness(1.06);}
+button.btn:active{filter:brightness(.96);}
+button.linklike{background:none;border:0;color:var(--teal);font-weight:600;cursor:pointer;padding:2px 0;font-size:13px;}
+
+input[type=text],input[type=number],input[type=time],select,textarea{
+  background:var(--bg);border:1px solid var(--line);border-radius:7px;
+  padding:7px 9px;color:var(--ink);width:100%;
+}
+textarea{resize:vertical;min-height:68px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;}
+label.field{display:flex;flex-direction:column;gap:4px;font-size:12.5px;color:var(--ink-dim);font-weight:600;}
+.form-row{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));align-items:end;}
+.inline-form{background:var(--bg);border:1px dashed var(--line);border-radius:9px;padding:12px 14px;margin-top:10px;}
+
+table{width:100%;border-collapse:collapse;font-size:13.5px;}
+th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-dim);font-weight:600;padding:0 8px 6px;border-bottom:1px solid var(--line);}
+td{padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+.table-wrap{overflow-x:auto;}
+td input[type=number]{width:64px;font-variant-numeric:tabular-nums;}
+td input[type=text]{min-width:110px;}
+
+.chip{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:3px 10px;font-size:12px;font-weight:600;border:1px solid transparent;cursor:pointer;white-space:nowrap;}
+.chip.yes{background:var(--teal-weak);color:var(--teal);}
+.chip.no{background:var(--amber-weak);color:var(--brown);}
+.chip.static{cursor:default;}
+.chip.level6{background:var(--teal-weak);color:var(--teal);}
+.chip.level3{background:var(--amber-weak);color:var(--brown);}
+.chip.example{background:transparent;border-color:var(--line);color:var(--ink-dim);font-weight:500;}
+
+.badge-bar{height:7px;border-radius:999px;background:var(--line);overflow:hidden;}
+.badge-bar > span{display:block;height:100%;background:var(--amber);}
+.legend-row{display:flex;justify-content:space-between;font-size:12px;color:var(--ink-dim);margin-top:5px;}
+
+.empty{border:1px dashed var(--line);border-radius:9px;padding:22px;text-align:center;color:var(--ink-dim);font-size:13.5px;}
+.banner-note{display:flex;gap:10px;align-items:flex-start;background:var(--amber-weak);border:1px solid var(--surface-alt-line);border-radius:9px;padding:10px 14px;font-size:13px;color:var(--brown);margin-bottom:16px;}
+.section-title{font-family:var(--font-display);font-weight:700;font-size:17px;color:var(--brown);margin:18px 0 8px;}
+.section-title:first-child{margin-top:0;}
+.muted{color:var(--ink-dim);}
+.right{text-align:right;}
+.hstack{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.spacer{flex:1;}
+
+/* class card */
+.class-card{border:1px solid var(--line);border-radius:9px;padding:14px 16px;background:var(--surface);}
+.class-card + .class-card{margin-top:12px;}
+.class-card .head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.class-card .head h4{font-family:var(--font-display);font-size:19px;font-weight:700;margin:0;}
+
+/* schedule */
+.rotation-panel{margin-top:10px;border-top:1px solid var(--line);padding-top:12px;}
+.rotation-grid{display:grid;border:1px solid var(--line);border-radius:8px;overflow:hidden;}
+.rotation-grid .rg-row{display:contents;}
+.rotation-grid .rg-cell{padding:7px 9px;border-bottom:1px solid var(--line);border-right:1px solid var(--line);font-size:12.5px;}
+.rotation-grid .rg-cell.head{background:var(--surface-alt);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--brown);}
+.group-block{border:1px solid var(--line);border-radius:8px;padding:9px 11px;background:var(--bg);}
+.group-block h5{margin:0 0 6px;font-family:var(--font-display);font-size:15px;color:var(--ink);}
+.student-chip{display:inline-flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:3px 8px 3px 10px;font-size:12px;margin:3px 4px 0 0;}
+.student-chip select{border:0;background:transparent;padding:0;font-size:11px;color:var(--ink-dim);}
+
+/* meeting status rows */
+tr.status-bleu td{background:var(--status-blue);}
+tr.status-jaune td{background:var(--status-yellow);}
+tr.status-vert td{background:var(--status-green);}
+.status-legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:10px;}
+.status-legend .sw{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--ink-dim);}
+.status-legend .swatch{width:14px;height:14px;border-radius:4px;border:1px solid var(--line);flex:none;}
+.swatch.blanc{background:var(--surface);}
+.swatch.bleu{background:var(--status-blue);}
+.swatch.jaune{background:var(--status-yellow);}
+.swatch.vert{background:var(--status-green);}
+
+/* print */
+#print-root{display:none;}
+@media print{
+  @page{ size:A4 landscape; margin:10mm; }
+  *{ -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  body *{visibility:hidden;}
+  #print-root,#print-root *{visibility:visible;}
+  #print-root{display:block;position:absolute;top:0;left:0;width:100%;padding:0;margin:0;}
+  .print-page{padding:2mm 2mm;page-break-after:always;}
+  .print-page:last-child{page-break-after:auto;}
+  .print-head{display:flex;justify-content:space-between;align-items:baseline;border-bottom:2px solid #8A4B1E;padding-bottom:6px;margin-bottom:12px;}
+  .print-head h2{font-size:20px;margin:0;color:#8A4B1E;font-family:Georgia,serif;}
+  .print-head .meta{font-size:11px;color:#5B5347;}
+  .print-table{width:100%;border-collapse:collapse;font-size:11.5px;margin-bottom:10px;}
+  .print-table th,.print-table td{border:1px solid #ccc;padding:5px 7px;text-align:left;}
+  .print-table th{background:#F3E8D6;}
+  .print-table tr.status-bleu td{background:#DCEBF7;}
+  .print-table tr.status-jaune td{background:#FBF0C7;}
+  .print-table tr.status-vert td{background:#DFF3E3;}
+  .print-groups{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;}
+  .print-group{border:1px solid #ccc;border-radius:6px;padding:8px 10px;}
+  .print-group h4{margin:0 0 4px;font-size:13px;}
+  .print-legend{display:flex;gap:14px;font-size:10.5px;color:#5B5347;margin-bottom:8px;}
+  .print-legend span{display:inline-flex;align-items:center;gap:5px;}
+  .print-legend i{width:11px;height:11px;border:1px solid #ccc;border-radius:3px;display:inline-block;}
+}
+
+@media (max-width:820px){
+  .app{flex-direction:column;}
+  .sidebar{width:100%;height:auto;position:relative;top:auto;border-right:0;border-bottom:1px solid var(--surface-alt-line);}
+  nav.mainnav{flex-direction:row;overflow-x:auto;gap:4px;}
+  .main{padding:18px 16px 50px;}
+}
+</style>
+
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="eyebrow">Collège Pasteur — Villemomble</div>
+      <h1>Régie Perche</h1>
+      <div class="sub">Initiation au saut à la perche — organisation &amp; suivi</div>
+    </div>
+    <nav class="mainnav" id="mainnav">
+      <button data-view="dashboard"><span class="dot"></span>Tableau de bord</button>
+      <button data-view="classes"><span class="dot"></span>Classes &amp; élèves</button>
+      <button data-view="organisation"><span class="dot"></span>Organisation du jour J</button>
+      <button data-view="demandes6e"><span class="dot"></span>Meeting — 6ème</button>
+      <button data-view="suivi3e"><span class="dot"></span>Sortie &amp; meeting — 3ème</button>
+      <button data-view="invites"><span class="dot"></span>Invités hors-classe</button>
+      <button data-view="dons"><span class="dot"></span>Dons &amp; mécénat</button>
+    </nav>
+    <div class="sidebar-foot">
+      <div id="syncStatus">Connexion…</div>
+      <div class="hstack" id="localModeTools" style="margin-top:8px;" hidden>
+        <button class="btn small ghost" id="btnExportData">Exporter (.json)</button>
+        <button class="btn small ghost" id="btnImportData">Importer (.json)</button>
+        <input type="file" id="fileImportData" accept="application/json" hidden>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+
+    <section class="view" id="view-dashboard">
+      <div class="view-head">
+        <div>
+          <h2>Tableau de bord</h2>
+          <p>Vue d'ensemble des places disponibles pour le meeting de la Perche aux Étoiles, tous publics confondus.</p>
+        </div>
+        <div class="actions"><button class="btn ghost" id="btnPrintDashboard">Exporter en PDF</button></div>
+      </div>
+      <div id="dash-warning"></div>
+      <div class="grid stat-row" id="dash-stats"></div>
+      <div class="card" style="margin-top:16px;">
+        <h3>Capacité totale du meeting</h3>
+        <div class="card-sub">Nombre total de places gratuites obtenues pour le meeting — modifiable à tout moment.</div>
+        <div class="form-row" style="max-width:260px;">
+          <label class="field">Places disponibles
+            <input type="number" id="capacityInput" min="0" step="1">
+          </label>
+        </div>
+      </div>
+      <div class="grid two" style="margin-top:16px;">
+        <div class="card">
+          <h3>Répartition des places attribuées</h3>
+          <div class="card-sub">Par catégorie de demandeurs.</div>
+          <div id="dash-breakdown"></div>
+        </div>
+        <div class="card">
+          <h3>À traiter</h3>
+          <div class="card-sub">Ce qu'il reste à régler.</div>
+          <div id="dash-todo"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="view" id="view-classes" hidden>
+      <div class="view-head">
+        <div>
+          <h2>Classes 6ème</h2>
+          <p>Vos classes de 6ème, utilisées pour l'organisation des ateliers et le suivi du meeting. Ajoutez les élèves un par un ou collez une liste CSV.</p>
+        </div>
+        <div class="actions">
+          <button class="btn ghost" id="btnPrintClasses">Exporter en PDF</button>
+          <button class="btn primary" id="btnAddClass">+ Ajouter une classe</button>
+        </div>
+      </div>
+      <div id="addClassForm"></div>
+      <div id="classes-6e"></div>
+    </section>
+
+    <section class="view" id="view-organisation" hidden>
+      <div class="view-head">
+        <div>
+          <h2>Organisation du jour J</h2>
+          <p>Affectez chaque classe à un créneau, répartissez les élèves en groupes et vérifiez la rotation sur les quatre ateliers.</p>
+        </div>
+        <div class="actions">
+          <button class="btn ghost" id="btnPrintOverview">Imprimer la vue d'ensemble</button>
+          <button class="btn primary" id="btnPrintSheets">Imprimer les fiches par classe</button>
+        </div>
+      </div>
+
+      <details class="card" id="settingsPanel">
+        <summary style="cursor:pointer;font-family:var(--font-display);font-weight:700;color:var(--brown);font-size:16px;">Réglages : ateliers &amp; créneaux</summary>
+        <div class="grid two" style="margin-top:14px;">
+          <div>
+            <h3 style="font-size:15px;">Ateliers</h3>
+            <div id="ateliersList"></div>
+            <button class="btn small ghost" id="btnAddAtelier" style="margin-top:8px;">+ Atelier</button>
+          </div>
+          <div>
+            <h3 style="font-size:15px;">Créneaux horaires</h3>
+            <div id="slotsList"></div>
+            <button class="btn small ghost" id="btnAddSlot" style="margin-top:8px;">+ Créneau</button>
+          </div>
+        </div>
+      </details>
+
+      <div class="card" style="margin-top:14px;">
+        <h3>Planning des classes</h3>
+        <div class="card-sub">Un créneau = une classe. La répartition en groupes se fait juste en dessous, une fois la classe affectée.</div>
+        <div id="scheduleTable"></div>
+      </div>
+    </section>
+
+    <section class="view" id="view-demandes6e" hidden>
+      <div class="view-head">
+        <div>
+          <h2>Meeting — 6ème</h2>
+          <p>La liste de chaque classe, pour cocher la feuille d'information, la réponse au meeting et les places attribuées.</p>
+        </div>
+        <div class="actions"><button class="btn ghost" id="btnPrintMeeting6e">Exporter en PDF</button></div>
+      </div>
+      <div class="banner-note">Les familles peuvent demander plusieurs places, mais nous n'en attribuons qu'une partie afin de garantir un accès à tous les élèves si l'ensemble d'entre eux souhaite se rendre au meeting.</div>
+      <div class="card">
+        <h3 style="font-size:16px;">Lecture des couleurs</h3>
+        <div class="status-legend">
+          <span class="sw"><span class="swatch blanc"></span>Ne demande pas de place</span>
+          <span class="sw"><span class="swatch bleu"></span>Demande en attente d'attribution</span>
+          <span class="sw"><span class="swatch jaune"></span>Attribution partielle</span>
+          <span class="sw"><span class="swatch vert"></span>Attribution complète</span>
+        </div>
+      </div>
+      <div id="meeting6eBody"></div>
+    </section>
+
+    <section class="view" id="view-suivi3e" hidden>
+      <div class="view-head">
+        <div>
+          <h2>Sortie &amp; meeting — 3ème</h2>
+          <p>Élèves inscrits à la sortie d'initiation (précisez la classe de chacun) : autorisation, paiement, puis souhait et places pour le meeting.</p>
+        </div>
+        <div class="actions">
+          <button class="btn ghost" id="btnPrintSuivi3e">Exporter en PDF</button>
+          <button class="btn primary" id="btnAddEleve3e">+ Ajouter un élève</button>
+        </div>
+      </div>
+      <div id="addEleve3eForm"></div>
+      <div class="card" style="margin-top:14px;">
+        <div class="table-wrap"><table id="table-suivi3e"></table></div>
+      </div>
+    </section>
+
+    <section class="view" id="view-invites" hidden>
+      <div class="view-head">
+        <div>
+          <h2>Invités hors-classe</h2>
+          <p>Collègues, partenaires ou personnes ayant contribué au projet : attribuez-leur des places sur l'enveloppe globale.</p>
+        </div>
+        <div class="actions">
+          <button class="btn ghost" id="btnPrintInvites">Exporter en PDF</button>
+          <button class="btn primary" id="btnAddInvite">+ Ajouter un invité</button>
+        </div>
+      </div>
+      <div id="addInviteForm"></div>
+      <div class="card" style="margin-top:14px;">
+        <div class="table-wrap"><table id="table-invites"></table></div>
+      </div>
+    </section>
+
+    <section class="view" id="view-dons" hidden>
+      <div class="view-head">
+        <div>
+          <h2>Dons &amp; mécénat</h2>
+          <p>Chaque entreprise, association ou personne démarchée pour le mécénat : papier remis, retour obtenu, et — en cas de don — montant et attribution de places au meeting s'il en reste sur l'enveloppe globale.</p>
+        </div>
+        <div class="actions">
+          <button class="btn ghost" id="btnPrintDons">Exporter en PDF</button>
+          <button class="btn primary" id="btnAddDon">+ Ajouter une entreprise démarchée</button>
+        </div>
+      </div>
+      <div id="addDonForm"></div>
+      <div class="card" style="margin-top:14px;">
+        <div class="table-wrap"><table id="table-dons"></table></div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<div id="print-root"></div>
+
+<script>
+(function(){
+"use strict";
+
+/* ============================================================
+   STATE
+   ============================================================ */
+var state = {
+  config: { totalMeetingCapacity: 0, ateliers: [], hourSlots: [] },
+  classes: [],
+  schedule: { assignments:{}, groups:{} },
+  dons: [],
+  suivi3e: [],
+  invites: []
+};
+var db = null;
+var dbReady = false;
+var seededOnce = { config:false, classes:false, schedule:false };
+
+function genId(prefix){
+  return (prefix||"id") + "_" + Date.now().toString(36) + Math.random().toString(36).slice(2,8);
+}
+
+function defaultAteliers(){
+  return [
+    {id:genId("at"), nom:"Perche", lieu:"Gymnase intérieur", encadrement:"Encadrant de l'initiation + enseignant EPS"},
+    {id:genId("at"), nom:"Sprint", lieu:"Piste extérieure", encadrement:"Enseignant EPS"},
+    {id:genId("at"), nom:"Information (perche / athlétisme)", lieu:"Gymnase intérieur", encadrement:"Encadrant de l'initiation"},
+    {id:genId("at"), nom:"Réactivité", lieu:"Plateau extérieur", encadrement:"Enseignant EPS"}
+  ];
+}
+function defaultSlots(){
+  var ranges = ["08:25-09:20","09:25-10:20","10:35-11:30","11:35-12:30","14:00-14:55","15:10-16:05","16:10-17:05"];
+  return ranges.map(function(r){
+    var parts = r.split("-");
+    var dur = timeToMin(parts[1]) - timeToMin(parts[0]);
+    return {id:genId("hs"), start:parts[0], durationMin:dur};
+  });
+}
+function defaultMeetingObj(){
+  return {feuilleRendue:false, reponse:"sans-reponse", placesSouhaitees:0, transportMode:"Personnel", covoiturageAvecQui:"", placesCovoiturageOffertes:0, covoiturageElevesEmmenes:"", placesAttribuees:0, numerosPlaces:""};
+}
+
+function transportSummaryText(m){
+  if(m.transportMode==="Besoin"){
+    return "Besoin de covoiturage" + (m.covoiturageAvecQui ? " — avec " + m.covoiturageAvecQui : "");
+  }
+  if(m.transportMode==="Inconnu"){
+    return "Ne sait pas comment venir — compte sur un covoiturage";
+  }
+  if(m.transportMode==="Propose"){
+    var bits = [];
+    if(Number(m.placesCovoiturageOffertes)>0) bits.push(Number(m.placesCovoiturageOffertes)+" place(s) offerte(s)");
+    if(m.covoiturageElevesEmmenes) bits.push("pour " + m.covoiturageElevesEmmenes);
+    return "Propose du covoiturage" + (bits.length ? " — " + bits.join(" ") : "");
+  }
+  return m.transportMode || "—";
+}
+function defaultClasses(){
+  var out = [];
+  var letters = ["A","B","C","D","E","F","G"];
+  letters.forEach(function(L,i){
+    var students = [];
+    if(i===0){
+      students = [
+        {id:genId("st"), nom:"Belkacem", prenom:"Inès", exemple:true, meeting:Object.assign(defaultMeetingObj(), {feuilleRendue:true, reponse:"non"})},
+        {id:genId("st"), nom:"Garcia", prenom:"Noah", exemple:true, meeting:Object.assign(defaultMeetingObj(), {feuilleRendue:true, reponse:"oui", placesSouhaitees:2, transportMode:"Besoin", covoiturageAvecQui:"Famille Traoré"})},
+        {id:genId("st"), nom:"Martin", prenom:"Léa", exemple:true, meeting:Object.assign(defaultMeetingObj(), {feuilleRendue:true, reponse:"oui", placesSouhaitees:3, placesAttribuees:1, transportMode:"Personnel"})},
+        {id:genId("st"), nom:"Traoré", prenom:"Yanis", exemple:true, meeting:Object.assign(defaultMeetingObj(), {feuilleRendue:true, reponse:"oui", placesSouhaitees:2, placesAttribuees:2, numerosPlaces:"14, 15", transportMode:"Propose", placesCovoiturageOffertes:2, covoiturageElevesEmmenes:"Noah Garcia"})}
+      ];
+    }
+    out.push({id:genId("cls"), niveau:"6e", nom:"6ème "+L, students:students});
+  });
+  return out;
+}
+
+/* ============================================================
+   DB INIT
+   ============================================================ */
+/* ------------------------------------------------------------
+   Firebase Realtime Database — configuration du projet "eps-pasteur"
+   Ces clés client ne sont pas secrètes (elles identifient simplement le
+   projet Firebase) : la protection des données repose sur les règles de
+   sécurité configurées côté console Firebase, pas sur le fait de cacher
+   cette configuration. Voir le README fourni avec ce fichier.
+   ------------------------------------------------------------ */
+var firebaseConfig = {
+  apiKey: "AIzaSyAJgRygktg-zkVSiTHgP2Co7AWb-E0I0Qw",
+  authDomain: "eps-pasteur.firebaseapp.com",
+  databaseURL: "https://eps-pasteur-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "eps-pasteur",
+  storageBucket: "eps-pasteur.firebasestorage.app",
+  messagingSenderId: "501398220240",
+  appId: "1:501398220240:web:728d6df17f5d33b82b5dd5",
+  measurementId: "G-VNP9NN1PD8"
+};
+var FIREBASE_ROOT = "regiePerche";
+
+/* Adapte l'API Firebase Realtime Database (compat) à l'interface
+   doc()/collection() utilisée par le reste de l'application, pour ne
+   pas avoir à réécrire subscribeAll()/writeConfig()/upsertClass()/etc. */
+function wrapRealtimeDb(rtdb, rootPath){
+  function refFor(path){ return rtdb.ref(rootPath + "/" + path); }
+  return {
+    doc: function(path){
+      var r = refFor(path);
+      return {
+        onSnapshot: function(cb, errCb){
+          r.on("value", function(snap){
+            var val = snap.val();
+            cb({ exists: val !== null && val !== undefined, data: function(){ return val || {}; } });
+          }, function(err){ if(errCb) errCb(err); });
+        },
+        set: function(obj){ return r.set(obj); },
+        update: function(patch){ return r.update(patch); },
+        delete: function(){ return r.remove(); }
+      };
+    },
+    collection: function(path){
+      var r = refFor(path);
+      return {
+        onSnapshot: function(cb, errCb){
+          r.on("value", function(snap){
+            var val = snap.val() || {};
+            var docs = Object.keys(val).map(function(id){
+              return { id: id, data: function(){ return val[id]; } };
+            });
+            cb({ docs: docs, empty: docs.length===0 });
+          }, function(err){ if(errCb) errCb(err); });
+        },
+        doc: function(id){
+          var dr = refFor(path + "/" + id);
+          return {
+            set: function(obj){ return dr.set(obj); },
+            update: function(patch){ return dr.update(patch); },
+            delete: function(){ return dr.remove(); }
+          };
+        }
+      };
+    }
+  };
+}
+
+function initDb(){
+  if(typeof firebase === "undefined" || !firebase.initializeApp || !firebaseConfig.databaseURL){
+    goLocalMode();
+    return;
+  }
+  try{
+    var app = firebase.apps && firebase.apps.length ? firebase.apps[0] : firebase.initializeApp(firebaseConfig);
+    var rtdb = firebase.database(app);
+    db = wrapRealtimeDb(rtdb, FIREBASE_ROOT);
+    dbReady = true;
+    setSyncStatus("Connexion à Firebase…", true);
+    subscribeAll();
+    rtdb.ref(".info/connected").on("value", function(snap){
+      if(!dbReady) return;
+      if(snap.val()===true) setSyncStatus("Synchronisé (Firebase, temps réel)", true);
+      else setSyncStatus("Connexion Firebase perdue — nouvelle tentative…", false);
+    });
+    rtdb.ref(FIREBASE_ROOT).once("value").catch(function(){
+      setSyncStatus("Accès refusé par Firebase (vérifiez les règles de sécurité) — voir README", false);
+    });
+  }catch(err){
+    goLocalMode();
+  }
+  setTimeout(function(){ if(!dbReady) goLocalMode(); }, 10000);
+}
+
+function goLocalMode(){
+  if(dbReady) return;
+  dbReady = false; db = null;
+  state.config = { totalMeetingCapacity:0, ateliers:defaultAteliers(), hourSlots:defaultSlots() };
+  state.classes = defaultClasses();
+  state.schedule = { assignments:{}, groups:{} };
+  setSyncStatus("Mode fichier local (Firebase indisponible) — pensez à exporter avant de fermer", false);
+  document.getElementById("localModeTools").hidden = false;
+  renderAll();
+}
+
+function setSyncStatus(text, ok){
+  var el = document.getElementById("syncStatus");
+  el.textContent = text;
+  el.style.color = ok ? "var(--teal)" : "var(--danger)";
+}
+
+function exportData(){
+  var payload = {
+    exportedAt: new Date().toISOString(),
+    config: state.config,
+    classes: state.classes,
+    schedule: state.schedule,
+    dons: state.dons,
+    suivi3e: state.suivi3e,
+    invites: state.invites
+  };
+  var blob = new Blob([JSON.stringify(payload, null, 2)], {type:"application/json"});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement("a");
+  var stamp = new Date().toISOString().slice(0,16).replace(/[:T]/g,"-");
+  a.href = url; a.download = "regie-perche-" + stamp + ".json";
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+}
+
+function importDataFromFile(file){
+  var reader = new FileReader();
+  reader.onload = function(){
+    try{
+      var data = JSON.parse(reader.result);
+      if(data.config) state.config = data.config;
+      if(data.classes) state.classes = data.classes;
+      if(data.schedule) state.schedule = data.schedule;
+      if(data.dons) state.dons = data.dons;
+      if(data.suivi3e) state.suivi3e = data.suivi3e;
+      if(data.invites) state.invites = data.invites;
+      renderAll();
+      setSyncStatus("Données importées — pensez à ré-exporter avant de fermer", false);
+    }catch(e){
+      alert("Impossible de lire ce fichier : ce n'est pas un export valide de Régie Perche.");
+    }
+  };
+  reader.readAsText(file);
+}
+
+function subscribeAll(){
+  db.doc("config/main").onSnapshot(function(snap){
+    if(snap.exists){
+      var d = snap.data();
+      state.config.totalMeetingCapacity = typeof d.totalMeetingCapacity==="number" ? d.totalMeetingCapacity : 0;
+      state.config.ateliers = Array.isArray(d.ateliers) && d.ateliers.length ? d.ateliers : defaultAteliers();
+      state.config.hourSlots = Array.isArray(d.hourSlots) && d.hourSlots.length ? d.hourSlots : defaultSlots();
+      renderAll();
+    } else if(!seededOnce.config){
+      seededOnce.config = true;
+      db.doc("config/main").set({ totalMeetingCapacity:0, ateliers:defaultAteliers(), hourSlots:defaultSlots() });
+    }
+  }, function(){ /* silent */ });
+
+  db.doc("schedule/main").onSnapshot(function(snap){
+    if(snap.exists){
+      var d = snap.data();
+      state.schedule.assignments = d.assignments || {};
+      state.schedule.groups = d.groups || {};
+      renderAll();
+    } else if(!seededOnce.schedule){
+      seededOnce.schedule = true;
+      db.doc("schedule/main").set({ assignments:{}, groups:{} });
+    }
+  }, function(){});
+
+  var firstClasses = true;
+  db.collection("classes").onSnapshot(function(snap){
+    state.classes = snap.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); });
+    state.classes.sort(function(a,b){ return (a.niveau+a.nom).localeCompare(b.niveau+b.nom); });
+    if(firstClasses){
+      firstClasses = false;
+      if(snap.empty && !seededOnce.classes){
+        seededOnce.classes = true;
+        defaultClasses().forEach(function(c){
+          db.collection("classes").doc(c.id).set({ niveau:c.niveau, nom:c.nom, students:c.students });
+        });
+      }
+    }
+    renderAll();
+  }, function(){});
+
+  db.collection("suivi3e").onSnapshot(function(snap){
+    state.suivi3e = snap.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); });
+    renderAll();
+  }, function(){});
+
+  db.collection("invites").onSnapshot(function(snap){
+    state.invites = snap.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); });
+    renderAll();
+  }, function(){});
+
+  db.collection("dons").onSnapshot(function(snap){
+    state.dons = snap.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); });
+    renderAll();
+  }, function(){});
+}
+
+/* write helpers (local-mode aware) */
+function writeConfig(patch){
+  Object.assign(state.config, patch);
+  if(dbReady){ db.doc("config/main").update(patch).catch(function(){}); }
+  else renderAll();
+}
+function writeSchedule(patch){
+  if(patch.assignments){ Object.assign(state.schedule.assignments, patch.assignments); }
+  if(patch.groups){
+    Object.keys(patch.groups).forEach(function(cid){
+      state.schedule.groups[cid] = Object.assign({}, state.schedule.groups[cid]||{}, patch.groups[cid]);
+    });
+  }
+  if(dbReady){ db.doc("schedule/main").update(patch).catch(function(){}); }
+  else renderAll();
+}
+function upsertClass(cls){
+  if(dbReady){ db.collection("classes").doc(cls.id).set({niveau:cls.niveau,nom:cls.nom,students:cls.students}); }
+  else { var i=state.classes.findIndex(function(c){return c.id===cls.id;}); if(i>=0) state.classes[i]=cls; else state.classes.push(cls); renderAll(); }
+}
+function deleteClass(id){
+  if(dbReady){ db.collection("classes").doc(id).delete(); }
+  else { state.classes = state.classes.filter(function(c){return c.id!==id;}); renderAll(); }
+}
+function upsertDoc(coll, obj){
+  if(dbReady){ db.collection(coll).doc(obj.id).set(withoutId(obj)); }
+  else { var arr=state[coll]; var i=arr.findIndex(function(x){return x.id===obj.id;}); if(i>=0) arr[i]=obj; else arr.push(obj); renderAll(); }
+}
+function updateDoc(coll, id, patch){
+  var arr = state[coll]; var item = arr.find(function(x){return x.id===id;});
+  if(item) Object.assign(item, patch);
+  if(dbReady){ db.collection(coll).doc(id).update(patch).catch(function(){}); }
+  else renderAll();
+}
+function deleteDoc(coll, id){
+  if(dbReady){ db.collection(coll).doc(id).delete(); }
+  else { state[coll] = state[coll].filter(function(x){return x.id!==id;}); renderAll(); }
+}
+function withoutId(obj){ var o=Object.assign({},obj); delete o.id; return o; }
+
+/* ============================================================
+   FOCUS PRESERVATION
+   ============================================================ */
+function withFocusPreserved(fn){
+  var active = document.activeElement;
+  var key = active && active.getAttribute ? active.getAttribute("data-focus-key") : null;
+  var selStart, selEnd;
+  if(key && typeof active.selectionStart === "number"){ selStart=active.selectionStart; selEnd=active.selectionEnd; }
+  fn();
+  if(key){
+    var el = document.querySelector('[data-focus-key="'+CSS.escape(key)+'"]');
+    if(el){
+      el.focus();
+      if(typeof selStart === "number" && el.setSelectionRange){
+        try{ el.setSelectionRange(selStart, selEnd); }catch(e){}
+      }
+    }
+  }
+}
+
+function debounce(fn, ms){
+  var t;
+  return function(){
+    var args = arguments, ctx = this;
+    clearTimeout(t);
+    t = setTimeout(function(){ fn.apply(ctx, args); }, ms);
+  };
+}
+
+/* ============================================================
+   NAVIGATION
+   ============================================================ */
+var currentView = "dashboard";
+document.getElementById("mainnav").addEventListener("click", function(e){
+  var btn = e.target.closest("button[data-view]");
+  if(!btn) return;
+  currentView = btn.getAttribute("data-view");
+  document.querySelectorAll(".view").forEach(function(v){ v.hidden = (v.id !== "view-"+currentView); });
+  document.querySelectorAll("nav.mainnav button").forEach(function(b){ b.setAttribute("aria-current", b===btn ? "true":"false"); });
+});
+document.querySelector('nav.mainnav button[data-view="dashboard"]').setAttribute("aria-current","true");
+
+/* ============================================================
+   UTIL
+   ============================================================ */
+function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
+function titleCase(s){
+  return String(s||"").toLowerCase().replace(/(^|[\s\-'])([a-zà-ÿ])/g, function(m,p1,p2){ return p1+p2.toUpperCase(); });
+}
+function sortedSlots(){ return state.config.hourSlots.slice().sort(function(a,b){ return a.start.localeCompare(b.start); }); }
+function fmtRange(start, durationMin){
+  var mins = timeToMin(start);
+  return fmtMin(mins) + " – " + fmtMin(mins + (durationMin||60));
+}
+function timeToMin(hhmm){ var p=(hhmm||"08:00").split(":"); return (+p[0])*60 + (+p[1]||0); }
+function fmtMin(m){ var h=Math.floor(m/60), mm=((m%60)+60)%60; return h + "h" + (mm<10?"0":"") + mm; }
+function classById(id){ return state.classes.find(function(c){return c.id===id;}); }
+function nbStudents(cls){ return cls && cls.students ? cls.students.length : 0; }
+
+function classesForSelect(niveau){
+  return state.classes.filter(function(c){ return !niveau || c.niveau===niveau; })
+    .slice().sort(function(a,b){ return a.nom.localeCompare(b.nom); });
+}
+
+/* ============================================================
+   MEETING 6E HELPERS (per-student, stored on classes[].students[].meeting)
+   ============================================================ */
+function ensureMeeting(s){
+  if(!s.meeting) s.meeting = defaultMeetingObj();
+  return s.meeting;
+}
+function meetingStatus(m){
+  var souh = (m.reponse==="oui") ? (Number(m.placesSouhaitees)||0) : 0;
+  if(souh<=0) return "blanc";
+  var attr = Number(m.placesAttribuees)||0;
+  if(attr<=0) return "bleu";
+  if(attr<souh) return "jaune";
+  return "vert";
+}
+function allSixiemeMeetingEntries(){
+  var out = [];
+  state.classes.filter(function(c){return c.niveau==="6e";}).forEach(function(c){
+    (c.students||[]).forEach(function(s){ out.push({cls:c, student:s, m:ensureMeeting(s)}); });
+  });
+  return out;
+}
+function updateStudentMeeting(clsId, stId, field, value){
+  var cls = classById(clsId); if(!cls) return null;
+  var s = (cls.students||[]).find(function(x){return x.id===stId;});
+  if(!s) return null;
+  ensureMeeting(s)[field] = value;
+  upsertClass(cls);
+  return cls;
+}
+
+/* ============================================================
+   RENDER: DASHBOARD
+   ============================================================ */
+function totalAttribuees(){
+  var a = allSixiemeMeetingEntries().reduce(function(s,e){ return s + (Number(e.m.placesAttribuees)||0); }, 0);
+  var b = state.suivi3e.reduce(function(s,e){ return s + (e.souhaiteMeeting ? (Number(e.placesAttribuees)||0) : 0); }, 0);
+  var c = state.invites.reduce(function(s,i){ return s + (Number(i.placesAttribuees)||0); }, 0);
+  var d = state.dons.reduce(function(s,don){ return s + (don.reponse==="oui" ? (Number(don.placesAttribuees)||0) : 0); }, 0);
+  return {sixieme:a, troisieme:b, invites:c, dons:d, total:a+b+c+d};
+}
+function totalDemandees(){
+  var a = allSixiemeMeetingEntries().reduce(function(s,e){ return s + (e.m.reponse==="oui" ? (Number(e.m.placesSouhaitees)||0) : 0); }, 0);
+  var b = state.suivi3e.reduce(function(s,e){ return s + (e.souhaiteMeeting ? (Number(e.placesSouhaitees)||0) : 0); }, 0);
+  return a+b;
+}
+
+function renderDashboard(){
+  var cap = Number(state.config.totalMeetingCapacity)||0;
+  var attr = totalAttribuees();
+  var dem = totalDemandees();
+  var restantes = cap - attr.total;
+
+  document.getElementById("capacityInput").value = cap;
+
+  var stats = [
+    {label:"Capacité totale", value: cap>0 ? cap : "—", note: cap>0? "places meeting" : "à définir"},
+    {label:"Places demandées", value: dem, note:"6ème + 3ème"},
+    {label:"Places attribuées", value: attr.total, note:"toutes catégories"},
+    {label:"Places restantes", value: cap>0 ? restantes : "—", note: cap>0 ? (restantes<0 ? "dépassement" : "disponibles") : "définir la capacité", warn: cap>0 && restantes<0}
+  ];
+  document.getElementById("dash-stats").innerHTML = stats.map(function(s){
+    return '<div class="stat-tile'+(s.warn?" warn":"")+'"><div class="label">'+esc(s.label)+'</div><div class="value">'+esc(s.value)+' <small>'+esc(s.note)+'</small></div></div>';
+  }).join("");
+
+  var warnEl = document.getElementById("dash-warning");
+  if(cap>0 && attr.total>cap){
+    warnEl.innerHTML = '<div class="banner-note">Les places attribuées ('+attr.total+') dépassent la capacité totale ('+cap+'). Ajustez les attributions dans les sections Meeting — 6ème, 3ème ou Invités.</div>';
+  } else { warnEl.innerHTML = ""; }
+
+  var maxCat = Math.max(attr.sixieme, attr.troisieme, attr.invites, attr.dons, 1);
+  var rows = [
+    {label:"6ème (prioritaire)", v:attr.sixieme},
+    {label:"3ème", v:attr.troisieme},
+    {label:"Invités hors-classe", v:attr.invites},
+    {label:"Dons & mécénat", v:attr.dons}
+  ];
+  document.getElementById("dash-breakdown").innerHTML = rows.map(function(r){
+    var pct = Math.round((r.v/maxCat)*100);
+    return '<div style="margin-bottom:10px;"><div class="legend-row" style="margin-bottom:3px;"><span>'+esc(r.label)+'</span><span style="font-variant-numeric:tabular-nums;">'+r.v+'</span></div><div class="badge-bar"><span style="width:'+pct+'%;"></span></div></div>';
+  }).join("");
+
+  var entries6e = allSixiemeMeetingEntries();
+  var pendingFeuilles = entries6e.filter(function(e){ return !e.m.feuilleRendue; }).length;
+  var pendingAttribution = entries6e.filter(function(e){ return meetingStatus(e.m)==="bleu"; }).length;
+  var pending3eAuth = state.suivi3e.filter(function(e){ return !e.autorisationSortieRecue; }).length;
+  var pending3ePay = state.suivi3e.filter(function(e){ return !e.argentRecu; }).length;
+  var assignedClassIds = Object.keys(state.schedule.assignments).map(function(k){ return state.schedule.assignments[k]; }).filter(Boolean);
+  var unscheduled = state.classes.filter(function(c){ return c.niveau==="6e" && assignedClassIds.indexOf(c.id)===-1; }).length;
+  var todo = [
+    {n:pendingFeuilles, label:"élève(s) 6ème sans feuille d'information rendue"},
+    {n:pendingAttribution, label:"demande(s) 6ème en attente d'attribution"},
+    {n:pending3eAuth, label:"élève(s) 3ème sans autorisation de sortie"},
+    {n:pending3ePay, label:"élève(s) 3ème sans paiement reçu"},
+    {n:unscheduled, label:"classe(s) 6ème non affectée(s) à un créneau"}
+  ];
+  document.getElementById("dash-todo").innerHTML = todo.map(function(t){
+    return '<div class="hstack" style="justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line);"><span class="muted">'+esc(t.label)+'</span><span class="chip '+(t.n>0?"no":"yes")+' static">'+t.n+'</span></div>';
+  }).join("");
+}
+
+/* ============================================================
+   RENDER: CLASSES
+   ============================================================ */
+var csvImportOpenFor = null; // classId currently showing CSV panel
+var addStudentOpenFor = null;
+
+function renderClasses(){
+  var wrap6 = document.getElementById("classes-6e");
+  var c6 = state.classes.filter(function(c){return c.niveau==="6e";}).sort(function(a,b){return a.nom.localeCompare(b.nom);});
+  wrap6.innerHTML = c6.length ? c6.map(classCardHtml).join("") : '<div class="empty">Aucune classe pour l’instant.</div>';
+}
+
+function classCardHtml(cls){
+  var rows = (cls.students||[]).slice().sort(function(a,b){ return (a.nom||"").localeCompare(b.nom||""); }).map(function(s){
+    return '<tr><td>'+esc(s.nom)+'</td><td>'+esc(s.prenom)+(s.exemple?' <span class="chip example static">exemple</span>':'')+'</td>'+
+      '<td class="right"><button class="linklike" data-act="rm-student" data-cls="'+cls.id+'" data-st="'+s.id+'">Retirer</button></td></tr>';
+  }).join("");
+  var hasExamples = (cls.students||[]).some(function(s){return s.exemple;});
+  return '<div class="class-card">'+
+    '<div class="head">'+
+      '<h4>'+esc(cls.nom)+'</h4>'+
+      '<span class="chip '+(cls.niveau==="6e"?"level6":"level3")+' static">'+(cls.niveau==="6e"?"6ème":"3ème")+'</span>'+
+      '<span class="muted" style="font-size:12.5px;">'+nbStudents(cls)+' élève(s)</span>'+
+      '<span class="spacer"></span>'+
+      (hasExamples ? '<button class="btn small ghost" data-act="clear-examples" data-cls="'+cls.id+'">Effacer les exemples</button>' : '')+
+      '<button class="btn small ghost" data-act="import-csv" data-cls="'+cls.id+'">Importer CSV</button>'+
+      '<button class="btn small ghost" data-act="add-student" data-cls="'+cls.id+'">+ Élève</button>'+
+      '<button class="btn small danger" data-act="del-class" data-cls="'+cls.id+'">Supprimer la classe</button>'+
+    '</div>'+
+    (addStudentOpenFor===cls.id ? addStudentFormHtml(cls.id) : '')+
+    (csvImportOpenFor===cls.id ? csvImportFormHtml(cls.id, "classes") : '')+
+    (rows ? '<div class="table-wrap" style="margin-top:10px;"><table><thead><tr><th>Nom</th><th>Prénom</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div>' : '<div class="empty" style="margin-top:10px;">Aucun élève. Ajoutez-les un par un ou importez un CSV.</div>')+
+  '</div>';
+}
+
+function addStudentFormHtml(clsId){
+  return '<div class="inline-form">'+
+    '<div class="form-row">'+
+      '<label class="field">Nom<input type="text" id="newStNom" data-focus-key="newStNom"></label>'+
+      '<label class="field">Prénom<input type="text" id="newStPrenom" data-focus-key="newStPrenom"></label>'+
+      '<div class="hstack"><button class="btn primary small" data-act="confirm-add-student" data-cls="'+clsId+'">Ajouter</button>'+
+      '<button class="btn ghost small" data-act="cancel-add-student">Annuler</button></div>'+
+    '</div></div>';
+}
+
+function csvImportFormHtml(targetId, targetColl){
+  return '<div class="inline-form">'+
+    '<div class="hstack" style="margin-bottom:8px;">'+
+      '<label class="field" style="flex:none;">Ordre des colonnes'+
+        '<select id="csvOrder"><option value="nom-prenom">Nom;Prénom</option><option value="prenom-nom">Prénom;Nom</option></select>'+
+      '</label>'+
+    '</div>'+
+    '<textarea id="csvText" placeholder="Collez votre liste, une ligne par élève : Nom;Prénom" data-focus-key="csvText"></textarea>'+
+    '<div class="hstack" style="margin-top:8px;">'+
+      '<button class="btn small ghost" data-act="csv-preview" data-target="'+targetId+'" data-coll="'+targetColl+'">Aperçu</button>'+
+      '<span class="spacer"></span>'+
+      '<button class="btn small ghost" data-act="csv-cancel">Annuler</button>'+
+    '</div>'+
+    '<div id="csvPreviewArea"></div>'+
+  '</div>';
+}
+
+function renderClassesRoot(){ renderClasses(); }
+
+/* ============================================================
+   RENDER: ORGANISATION
+   ============================================================ */
+var expandedScheduleRow = null;
+
+function renderAteliersSettings(){
+  var list = document.getElementById("ateliersList");
+  list.innerHTML = state.config.ateliers.map(function(a, idx){
+    return '<div class="inline-form" style="margin-top:8px;">'+
+      '<div class="form-row">'+
+        '<label class="field">Nom<input type="text" value="'+esc(a.nom)+'" data-act="atelier-field" data-id="'+a.id+'" data-field="nom" data-focus-key="at-nom-'+a.id+'"></label>'+
+        '<label class="field">Lieu<input type="text" value="'+esc(a.lieu)+'" data-act="atelier-field" data-id="'+a.id+'" data-field="lieu" data-focus-key="at-lieu-'+a.id+'"></label>'+
+        '<label class="field">Encadrement<input type="text" value="'+esc(a.encadrement)+'" data-act="atelier-field" data-id="'+a.id+'" data-field="encadrement" data-focus-key="at-enc-'+a.id+'"></label>'+
+        '<button class="btn small danger" data-act="rm-atelier" data-id="'+a.id+'">Retirer</button>'+
+      '</div></div>';
+  }).join("");
+}
+function renderSlotsSettings(){
+  var list = document.getElementById("slotsList");
+  list.innerHTML = sortedSlots().map(function(s){
+    return '<div class="inline-form" style="margin-top:8px;">'+
+      '<div class="form-row">'+
+        '<label class="field">Heure de début<input type="time" value="'+esc(s.start)+'" data-act="slot-field" data-id="'+s.id+'" data-field="start"></label>'+
+        '<label class="field">Durée (min)<input type="number" value="'+esc(s.durationMin)+'" min="10" step="5" data-act="slot-field" data-id="'+s.id+'" data-field="durationMin" style="width:90px;"></label>'+
+        '<button class="btn small danger" data-act="rm-slot" data-id="'+s.id+'">Retirer</button>'+
+      '</div></div>';
+  }).join("");
+}
+
+function groupsForClass(cls){
+  var n = state.config.ateliers.length || 1;
+  var saved = state.schedule.groups[cls.id] || {};
+  var groups = {}; for(var g=0; g<n; g++) groups[g]=[];
+  var needsAuto = false;
+  (cls.students||[]).forEach(function(s, idx){
+    var g = saved[s.id];
+    if(typeof g !== "number" || g<0 || g>=n){ needsAuto = true; g = idx % n; }
+    groups[g].push(s);
+  });
+  return {groups:groups, needsAuto:needsAuto, n:n};
+}
+
+function renderScheduleTable(){
+  var slots = sortedSlots();
+  var html = '<div class="table-wrap"><table><thead><tr><th>Heure</th><th>Classe affectée</th><th>Élèves</th><th>Répartition</th><th></th></tr></thead><tbody>';
+  slots.forEach(function(slot){
+    var classId = state.schedule.assignments[slot.id] || "";
+    var cls = classId ? classById(classId) : null;
+    var options = '<option value="">— aucune —</option>' + classesForSelect().map(function(c){
+      return '<option value="'+c.id+'"'+(c.id===classId?" selected":"")+'>'+esc(c.nom)+' ('+(c.niveau==="6e"?"6e":"3e")+')</option>';
+    }).join("");
+    var statusChip = "";
+    if(cls){
+      var gi = groupsForClass(cls);
+      statusChip = gi.needsAuto ? '<span class="chip no">À répartir</span>' : '<span class="chip yes">Répartie</span>';
+    }
+    html += '<tr>'+
+      '<td style="font-variant-numeric:tabular-nums;white-space:nowrap;">'+fmtRange(slot.start, slot.durationMin)+'</td>'+
+      '<td><select data-act="assign-slot" data-slot="'+slot.id+'">'+options+'</select></td>'+
+      '<td>'+(cls?nbStudents(cls):"—")+'</td>'+
+      '<td>'+statusChip+'</td>'+
+      '<td class="right">'+(cls?'<button class="linklike" data-act="toggle-rotation" data-slot="'+slot.id+'">'+(expandedScheduleRow===slot.id?"Masquer":"Voir la rotation")+'</button>':'')+'</td>'+
+    '</tr>';
+    if(cls && expandedScheduleRow===slot.id){
+      html += '<tr><td colspan="5">'+rotationPanelHtml(slot, cls)+'</td></tr>';
+    }
+  });
+  html += '</tbody></table></div>';
+  document.getElementById("scheduleTable").innerHTML = html;
+}
+
+function rotationPanelHtml(slot, cls){
+  var ateliers = state.config.ateliers;
+  var n = ateliers.length || 1;
+  var gi = groupsForClass(cls);
+  var subDur = Math.round((slot.durationMin||60)/n);
+  var periods = [];
+  var t = timeToMin(slot.start);
+  for(var i=0;i<n;i++){ periods.push({start:t, end:t+subDur}); t+=subDur; }
+
+  var gridCols = "160px " + periods.map(function(){return "1fr";}).join(" ");
+  var head = '<div class="rg-cell head">Groupe</div>' + periods.map(function(p){ return '<div class="rg-cell head">'+fmtMin(p.start)+'–'+fmtMin(p.end)+'</div>'; }).join("");
+  var body = "";
+  for(var g=0; g<n; g++){
+    body += '<div class="rg-cell" style="font-weight:600;">Groupe '+(g+1)+' <span class="muted">('+gi.groups[g].length+')</span></div>';
+    for(var p=0;p<n;p++){
+      var at = ateliers[(g+p)%n];
+      body += '<div class="rg-cell">'+esc(at?at.nom:"—")+'</div>';
+    }
+  }
+
+  var groupBlocks = '<div class="print-groups-live" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-top:12px;">' +
+    Array.from({length:n}).map(function(_,g){
+      var startAt = ateliers[g%n];
+      var chips = gi.groups[g].map(function(s){
+        var opts = Array.from({length:n}).map(function(_,gg){ return '<option value="'+gg+'"'+(gg===g?" selected":"")+'>Groupe '+(gg+1)+'</option>'; }).join("");
+        return '<span class="student-chip">'+esc(s.prenom)+' '+esc(s.nom)+' <select data-act="move-student" data-cls="'+cls.id+'" data-st="'+s.id+'">'+opts+'</select></span>';
+      }).join(" ") || '<span class="muted" style="font-size:12px;">vide</span>';
+      return '<div class="group-block"><h5>Groupe '+(g+1)+' — débute à '+esc(startAt?startAt.nom:"—")+'</h5>'+chips+'</div>';
+    }).join("") + '</div>';
+
+  return '<div class="rotation-panel">'+
+    '<div class="hstack" style="margin-bottom:10px;"><strong>Rotation — '+esc(cls.nom)+'</strong><span class="spacer"></span>'+
+      '<button class="btn small ghost" data-act="auto-assign" data-cls="'+cls.id+'">Répartir automatiquement</button></div>'+
+    '<div class="rotation-grid" style="grid-template-columns:'+gridCols+';">'+head+body+'</div>'+
+    groupBlocks+
+  '</div>';
+}
+
+function renderOrganisation(){
+  renderAteliersSettings();
+  renderSlotsSettings();
+  renderScheduleTable();
+}
+
+/* ============================================================
+   RENDER: MEETING 6E (par classe, par élève)
+   ============================================================ */
+function meetingRowHtml(cls, s){
+  var m = ensureMeeting(s);
+  var status = meetingStatus(m);
+  var souhDisabled = m.reponse!=="oui";
+  return '<tr class="status-'+status+'">'+
+    '<td>'+esc(s.nom)+'</td>'+
+    '<td>'+esc(s.prenom)+'</td>'+
+    '<td><span class="chip '+(m.feuilleRendue?"yes":"no")+'" data-act="st-toggle" data-cls="'+cls.id+'" data-st="'+s.id+'" data-field="feuilleRendue">'+(m.feuilleRendue?"Rendue":"En attente")+'</span></td>'+
+    '<td><select data-act="st-select" data-cls="'+cls.id+'" data-st="'+s.id+'" data-field="reponse">'+
+      '<option value="sans-reponse"'+(m.reponse==="sans-reponse"?" selected":"")+'>Sans réponse</option>'+
+      '<option value="oui"'+(m.reponse==="oui"?" selected":"")+'>Oui</option>'+
+      '<option value="non"'+(m.reponse==="non"?" selected":"")+'>Non</option>'+
+    '</select></td>'+
+    '<td><input type="number" min="0" value="'+(Number(m.placesSouhaitees)||0)+'" data-act="st-num" data-cls="'+cls.id+'" data-st="'+s.id+'" data-field="placesSouhaitees"'+(souhDisabled?' disabled':'')+'></td>'+
+    '<td>'+meetingTransportCellHtml(cls, s, m)+'</td>'+
+    '<td><input type="number" min="0" value="'+(Number(m.placesAttribuees)||0)+'" data-act="st-num" data-cls="'+cls.id+'" data-st="'+s.id+'" data-field="placesAttribuees"></td>'+
+    '<td><input type="text" value="'+esc(m.numerosPlaces||"")+'" placeholder="ex. 12, 13" data-act="st-text" data-cls="'+cls.id+'" data-st="'+s.id+'" data-field="numerosPlaces" data-focus-key="np-'+s.id+'" style="min-width:90px;"></td>'+
+  '</tr>';
+}
+
+function meetingTransportCellHtml(cls, s, m){
+  var out = '<select data-act="st-select" data-cls="'+cls.id+'" data-st="'+s.id+'" data-field="transportMode">'+
+      '<option value="Personnel"'+(m.transportMode==="Personnel"?' selected':'')+'>Personnel</option>'+
+      '<option value="Besoin"'+(m.transportMode==="Besoin"?' selected':'')+'>Besoin de covoiturage</option>'+
+      '<option value="Inconnu"'+(m.transportMode==="Inconnu"?' selected':'')+'>Ne sait pas — compte sur un covoiturage</option>'+
+      '<option value="Propose"'+(m.transportMode==="Propose"?' selected':'')+'>Propose du covoiturage</option>'+
+      '<option value="Autre"'+(m.transportMode==="Autre"?' selected':'')+'>Autre</option>'+
+    '</select>';
+  if(m.transportMode==="Besoin"){
+    out += '<input type="text" value="'+esc(m.covoiturageAvecQui||"")+'" placeholder="Avec qui ?" data-act="st-text" data-cls="'+cls.id+'" data-st="'+s.id+'" data-field="covoiturageAvecQui" data-focus-key="cq-'+s.id+'" style="margin-top:4px;min-width:130px;">';
+  } else if(m.transportMode==="Propose"){
+    out += '<input type="number" min="0" value="'+(Number(m.placesCovoiturageOffertes)||0)+'" placeholder="Places offertes" data-act="st-num" data-cls="'+cls.id+'" data-st="'+s.id+'" data-field="placesCovoiturageOffertes" style="margin-top:4px;width:72px;">'+
+      '<input type="text" value="'+esc(m.covoiturageElevesEmmenes||"")+'" placeholder="Élève(s) emmené(s)" data-act="st-text" data-cls="'+cls.id+'" data-st="'+s.id+'" data-field="covoiturageElevesEmmenes" data-focus-key="ce-'+s.id+'" style="margin-top:4px;min-width:130px;">';
+  }
+  return out;
+}
+
+function meetingClassBlockHtml(cls){
+  var students = (cls.students||[]).slice().sort(function(a,b){ return (a.nom||"").localeCompare(b.nom||""); });
+  var rows = students.map(function(s){ return meetingRowHtml(cls, s); }).join("");
+  var totalSouh=0, totalAttr=0;
+  students.forEach(function(s){ var m=ensureMeeting(s); if(m.reponse==="oui") totalSouh += Number(m.placesSouhaitees)||0; totalAttr += Number(m.placesAttribuees)||0; });
+  return '<div class="card" style="margin-top:14px;">'+
+    '<h3>'+esc(cls.nom)+' <span class="muted" style="font-size:12.5px;font-weight:500;">('+students.length+' élève(s))</span></h3>'+
+    '<div class="table-wrap"><table><thead><tr>'+
+      '<th>Nom</th><th>Prénom</th><th>Feuille rendue</th><th>Vient au meeting</th><th>Places souh.</th><th>Transport</th><th>Places attr.</th><th>N° places</th>'+
+    '</tr></thead><tbody>'+
+    (rows || '<tr><td colspan="8"><div class="empty">Aucun élève dans cette classe.</div></td></tr>')+
+    '<tr><td colspan="4" class="right muted" style="font-weight:700;">Total classe</td><td class="right" style="font-weight:700;font-variant-numeric:tabular-nums;">'+totalSouh+'</td><td></td><td style="font-weight:700;font-variant-numeric:tabular-nums;">'+totalAttr+'</td><td></td></tr>'+
+    '</tbody></table></div></div>';
+}
+
+function renderMeeting6e(){
+  var host = document.getElementById("meeting6eBody");
+  if(!host) return;
+  var classes6 = state.classes.filter(function(c){ return c.niveau==="6e"; }).sort(function(a,b){ return a.nom.localeCompare(b.nom); });
+  host.innerHTML = classes6.length ? classes6.map(meetingClassBlockHtml).join("") : '<div class="empty">Aucune classe pour l’instant — ajoutez-les dans « Classes 6ème ».</div>';
+}
+
+/* ============================================================
+   RENDER: SUIVI 3E
+   ============================================================ */
+var addEleve3eOpen = false;
+
+function suivi3eTransportCellHtml(e){
+  var out = '<select data-act="select-field" data-coll="suivi3e" data-id="'+e.id+'" data-field="transportMode">'+
+      '<option value="Personnel"'+(e.transportMode==="Personnel"?' selected':'')+'>Personnel</option>'+
+      '<option value="Besoin"'+(e.transportMode==="Besoin"?' selected':'')+'>Besoin de covoiturage</option>'+
+      '<option value="Inconnu"'+(e.transportMode==="Inconnu"?' selected':'')+'>Ne sait pas — compte sur un covoiturage</option>'+
+      '<option value="Propose"'+(e.transportMode==="Propose"?' selected':'')+'>Propose du covoiturage</option>'+
+      '<option value="Autre"'+(e.transportMode==="Autre"?' selected':'')+'>Autre</option>'+
+    '</select>';
+  if(e.transportMode==="Besoin"){
+    out += '<input type="text" value="'+esc(e.covoiturageAvecQui||"")+'" placeholder="Avec qui ?" data-act="text-field" data-coll="suivi3e" data-id="'+e.id+'" data-field="covoiturageAvecQui" data-focus-key="e3-cq-'+e.id+'" style="margin-top:4px;min-width:130px;">';
+  } else if(e.transportMode==="Propose"){
+    out += '<input type="number" min="0" value="'+(Number(e.placesCovoiturageOffertes)||0)+'" placeholder="Places offertes" data-act="num-field" data-coll="suivi3e" data-id="'+e.id+'" data-field="placesCovoiturageOffertes" style="margin-top:4px;width:72px;">'+
+      '<input type="text" value="'+esc(e.covoiturageElevesEmmenes||"")+'" placeholder="Élève(s) emmené(s)" data-act="text-field" data-coll="suivi3e" data-id="'+e.id+'" data-field="covoiturageElevesEmmenes" data-focus-key="e3-ce-'+e.id+'" style="margin-top:4px;min-width:130px;">';
+  }
+  return out;
+}
+
+function renderSuivi3e(){
+  var rows = state.suivi3e.slice().sort(function(a,b){return (a.nom||"").localeCompare(b.nom||"");}).map(function(e){
+    return '<tr>'+
+      '<td>'+esc(e.nom)+'</td>'+
+      '<td>'+esc(e.prenom)+'</td>'+
+      '<td><input type="text" value="'+esc(e.classe||"")+'" placeholder="ex. 3ème C" data-act="text-field" data-coll="suivi3e" data-id="'+e.id+'" data-field="classe" data-focus-key="classe-'+e.id+'" style="min-width:90px;"></td>'+
+      '<td><span class="chip '+(e.autorisationSortieRecue?"yes":"no")+'" data-act="toggle-bool" data-coll="suivi3e" data-id="'+e.id+'" data-field="autorisationSortieRecue">'+(e.autorisationSortieRecue?"Reçue":"En attente")+'</span></td>'+
+      '<td><span class="chip '+(e.argentRecu?"yes":"no")+'" data-act="toggle-bool" data-coll="suivi3e" data-id="'+e.id+'" data-field="argentRecu">'+(e.argentRecu?"Reçu":"En attente")+'</span></td>'+
+      '<td><span class="chip '+(e.souhaiteMeeting?"yes":"no")+'" data-act="toggle-bool" data-coll="suivi3e" data-id="'+e.id+'" data-field="souhaiteMeeting">'+(e.souhaiteMeeting?"Oui":"Non")+'</span></td>'+
+      '<td><input type="number" min="0" value="'+(Number(e.placesSouhaitees)||0)+'" data-act="num-field" data-coll="suivi3e" data-id="'+e.id+'" data-field="placesSouhaitees"'+(e.souhaiteMeeting?'':' disabled')+'></td>'+
+      '<td>'+(e.souhaiteMeeting? suivi3eTransportCellHtml(e) : '<span class="muted">—</span>')+'</td>'+
+      '<td><input type="number" min="0" value="'+(Number(e.placesAttribuees)||0)+'" data-act="num-field" data-coll="suivi3e" data-id="'+e.id+'" data-field="placesAttribuees"'+(e.souhaiteMeeting?'':' disabled')+'></td>'+
+      '<td class="right"><button class="linklike" data-act="del-doc" data-coll="suivi3e" data-id="'+e.id+'">Supprimer</button></td>'+
+    '</tr>';
+  }).join("");
+  var nbInscrits = state.suivi3e.length;
+  var nbAuth = state.suivi3e.filter(function(e){return e.autorisationSortieRecue;}).length;
+  var nbPay = state.suivi3e.filter(function(e){return e.argentRecu;}).length;
+  var totalAttr = state.suivi3e.reduce(function(s,e){return s+(e.souhaiteMeeting?(Number(e.placesAttribuees)||0):0);},0);
+  var table = '<thead><tr><th>Nom</th><th>Prénom</th><th>Classe</th><th>Autorisation sortie</th><th>Argent reçu</th><th>Souhaite meeting</th><th>Places souh.</th><th>Transport</th><th>Places attr.</th><th></th></tr></thead>'+
+    '<tbody>'+(rows || '<tr><td colspan="10"><div class="empty">Aucun élève inscrit pour l’instant.</div></td></tr>')+
+    '<tr><td colspan="8" class="right muted" style="font-weight:700;">'+nbInscrits+' inscrit(s) · '+nbAuth+' autorisation(s) · '+nbPay+' paiement(s) — Total places attribuées</td><td style="font-weight:700;font-variant-numeric:tabular-nums;">'+totalAttr+'</td><td></td></tr>'+
+    '</tbody>';
+  document.getElementById("table-suivi3e").innerHTML = table;
+
+  var host = document.getElementById("addEleve3eForm");
+  host.innerHTML = addEleve3eOpen ? '<div class="inline-form">'+
+    '<div class="form-row">'+
+      '<label class="field">Nom<input type="text" id="e3-nom" data-focus-key="e3-nom"></label>'+
+      '<label class="field">Prénom<input type="text" id="e3-prenom" data-focus-key="e3-prenom"></label>'+
+      '<label class="field">Classe<input type="text" id="e3-classe" placeholder="ex. 3ème C" data-focus-key="e3-classe"></label>'+
+      '<div class="hstack"><button class="btn primary small" id="e3-confirm">Ajouter</button><button class="btn ghost small" id="e3-cancel">Annuler</button></div>'+
+    '</div></div>' : '';
+}
+
+/* ============================================================
+   RENDER: INVITES
+   ============================================================ */
+var addInviteOpen = false;
+function renderInvites(){
+  var rows = state.invites.slice().sort(function(a,b){return (a.nom||"").localeCompare(b.nom||"");}).map(function(i){
+    return '<tr>'+
+      '<td>'+esc(i.nom)+'</td>'+
+      '<td><input type="text" value="'+esc(i.qualite||"")+'" data-act="text-field" data-coll="invites" data-id="'+i.id+'" data-field="qualite" data-focus-key="qual-'+i.id+'"></td>'+
+      '<td><input type="number" min="0" value="'+(Number(i.placesAttribuees)||0)+'" data-act="num-field" data-coll="invites" data-id="'+i.id+'" data-field="placesAttribuees"></td>'+
+      '<td style="max-width:200px;"><input type="text" value="'+esc(i.notes||"")+'" data-act="text-field" data-coll="invites" data-id="'+i.id+'" data-field="notes" data-focus-key="inv-notes-'+i.id+'"></td>'+
+      '<td class="right"><button class="linklike" data-act="del-doc" data-coll="invites" data-id="'+i.id+'">Supprimer</button></td>'+
+    '</tr>';
+  }).join("");
+  var totalAttr = state.invites.reduce(function(s,i){return s+(Number(i.placesAttribuees)||0);},0);
+  var table = '<thead><tr><th>Nom</th><th>Qualité</th><th>Places attribuées</th><th>Notes</th><th></th></tr></thead>'+
+    '<tbody>'+(rows || '<tr><td colspan="5"><div class="empty">Aucun invité pour l’instant.</div></td></tr>')+
+    '<tr><td colspan="2" class="right muted" style="font-weight:700;">Total</td><td style="font-weight:700;font-variant-numeric:tabular-nums;">'+totalAttr+'</td><td></td><td></td></tr>'+
+    '</tbody>';
+  document.getElementById("table-invites").innerHTML = table;
+
+  var host = document.getElementById("addInviteForm");
+  host.innerHTML = addInviteOpen ? '<div class="inline-form">'+
+    '<div class="form-row">'+
+      '<label class="field">Nom<input type="text" id="inv-nom" data-focus-key="inv-nom"></label>'+
+      '<label class="field">Qualité<input type="text" id="inv-qualite" placeholder="Collègue EPS, contributeur…" data-focus-key="inv-qualite"></label>'+
+      '<label class="field">Places attribuées<input type="number" id="inv-places" min="0" value="1"></label>'+
+      '<div class="hstack"><button class="btn primary small" id="inv-confirm">Ajouter</button><button class="btn ghost small" id="inv-cancel">Annuler</button></div>'+
+    '</div></div>' : '';
+}
+
+/* ============================================================
+   RENDER: DONS & MÉCÉNAT
+   ============================================================ */
+var addDonOpen = false;
+function renderDons(){
+  var rows = state.dons.slice().sort(function(a,b){return (a.nom||"").localeCompare(b.nom||"");}).map(function(d){
+    var enabled = d.reponse==="oui";
+    return '<tr>'+
+      '<td>'+esc(d.nom)+'</td>'+
+      '<td><select data-act="select-field" data-coll="dons" data-id="'+d.id+'" data-field="type">'+
+        '<option value="Entreprise"'+(d.type==="Entreprise"||!d.type?" selected":"")+'>Entreprise</option>'+
+        '<option value="Particulier"'+(d.type==="Particulier"?" selected":"")+'>Particulier</option>'+
+        '<option value="Association"'+(d.type==="Association"?" selected":"")+'>Association</option>'+
+      '</select></td>'+
+      '<td><span class="chip '+(d.papierRemis?"yes":"no")+'" data-act="toggle-bool" data-coll="dons" data-id="'+d.id+'" data-field="papierRemis">'+(d.papierRemis?"Remis":"Non remis")+'</span></td>'+
+      '<td><select data-act="select-field" data-coll="dons" data-id="'+d.id+'" data-field="reponse">'+
+        '<option value="sans-reponse"'+(d.reponse==="sans-reponse"?" selected":"")+'>Sans réponse</option>'+
+        '<option value="oui"'+(d.reponse==="oui"?" selected":"")+'>Oui — fait un don</option>'+
+        '<option value="non"'+(d.reponse==="non"?" selected":"")+'>Non</option>'+
+      '</select></td>'+
+      '<td><input type="number" min="0" step="1" value="'+(Number(d.montant)||0)+'" data-act="num-field" data-coll="dons" data-id="'+d.id+'" data-field="montant"'+(enabled?'':' disabled')+' style="width:80px;"> €</td>'+
+      '<td><input type="number" min="0" value="'+(Number(d.placesAttribuees)||0)+'" data-act="num-field" data-coll="dons" data-id="'+d.id+'" data-field="placesAttribuees"'+(enabled?'':' disabled')+'></td>'+
+      '<td style="max-width:200px;"><input type="text" value="'+esc(d.notes||"")+'" data-act="text-field" data-coll="dons" data-id="'+d.id+'" data-field="notes" data-focus-key="don-notes-'+d.id+'"></td>'+
+      '<td class="right"><button class="linklike" data-act="del-doc" data-coll="dons" data-id="'+d.id+'">Supprimer</button></td>'+
+    '</tr>';
+  }).join("");
+  var nbSollicites = state.dons.length;
+  var nbDonateurs = state.dons.filter(function(d){return d.reponse==="oui";}).length;
+  var totalMontant = state.dons.reduce(function(s,d){return s+(d.reponse==="oui"?(Number(d.montant)||0):0);},0);
+  var totalPlaces = state.dons.reduce(function(s,d){return s+(d.reponse==="oui"?(Number(d.placesAttribuees)||0):0);},0);
+  var table = '<thead><tr><th>Nom</th><th>Type</th><th>Papier remis</th><th>Retour</th><th>Montant</th><th>Places attr.</th><th>Notes</th><th></th></tr></thead>'+
+    '<tbody>'+(rows || '<tr><td colspan="8"><div class="empty">Aucune entreprise ou personne démarchée pour l’instant.</div></td></tr>')+
+    '<tr><td colspan="4" class="right muted" style="font-weight:700;">'+nbSollicites+' démarché(s) · '+nbDonateurs+' don(s) reçu(s)</td><td style="font-weight:700;font-variant-numeric:tabular-nums;">'+totalMontant+' €</td><td style="font-weight:700;font-variant-numeric:tabular-nums;">'+totalPlaces+'</td><td></td><td></td></tr>'+
+    '</tbody>';
+  document.getElementById("table-dons").innerHTML = table;
+
+  var host2 = document.getElementById("addDonForm");
+  host2.innerHTML = addDonOpen ? '<div class="inline-form">'+
+    '<div class="form-row">'+
+      '<label class="field">Nom<input type="text" id="don-nom" placeholder="Entreprise, association ou personne démarchée" data-focus-key="don-nom"></label>'+
+      '<label class="field">Type<select id="don-type">'+
+        '<option value="Entreprise" selected>Entreprise</option>'+
+        '<option value="Particulier">Particulier</option>'+
+        '<option value="Association">Association</option>'+
+      '</select></label>'+
+      '<div class="hstack"><button class="btn primary small" id="don-confirm">Ajouter</button><button class="btn ghost small" id="don-cancel">Annuler</button></div>'+
+    '</div></div>' : '';
+}
+
+/* ============================================================
+   MASTER RENDER
+   ============================================================ */
+function renderAll(){
+  withFocusPreserved(function(){
+    renderDashboard();
+    renderClassesRoot();
+    renderOrganisation();
+    renderMeeting6e();
+    renderSuivi3e();
+    renderInvites();
+    renderDons();
+  });
+}
+
+/* ============================================================
+   EVENT DELEGATION
+   ============================================================ */
+document.addEventListener("click", function(e){
+  var t = e.target.closest("[data-act]");
+
+  if(e.target.id==="btnExportData"){ exportData(); return; }
+  if(e.target.id==="btnImportData"){ document.getElementById("fileImportData").click(); return; }
+
+  if(e.target.id==="btnAddClass"){
+    document.getElementById("addClassForm").innerHTML = '<div class="card" style="margin-bottom:12px;"><div class="form-row">'+
+      '<label class="field">Nom<input type="text" id="newClsNom" placeholder="ex. 6ème H" data-focus-key="newClsNom"></label>'+
+      '<div class="hstack"><button class="btn primary small" id="newClsConfirm">Créer</button><button class="btn ghost small" id="newClsCancel">Annuler</button></div>'+
+    '</div></div>';
+    return;
+  }
+  if(e.target.id==="newClsConfirm"){
+    var nom = document.getElementById("newClsNom").value.trim();
+    if(!nom) return;
+    upsertClass({id:genId("cls"), niveau:"6e", nom:nom, students:[]});
+    document.getElementById("addClassForm").innerHTML = "";
+    return;
+  }
+  if(e.target.id==="newClsCancel"){ document.getElementById("addClassForm").innerHTML=""; return; }
+
+  if(e.target.id==="btnAddEleve3e"){ addEleve3eOpen = true; renderSuivi3e(); return; }
+  if(e.target.id==="e3-cancel"){ addEleve3eOpen = false; renderSuivi3e(); return; }
+  if(e.target.id==="e3-confirm"){
+    var nom3 = document.getElementById("e3-nom").value.trim();
+    var pre3 = document.getElementById("e3-prenom").value.trim();
+    var classe3 = document.getElementById("e3-classe").value.trim();
+    if(!nom3 && !pre3) return;
+    upsertDoc("suivi3e", {id:genId("s3"), nom:titleCase(nom3), prenom:titleCase(pre3), classe:classe3, autorisationSortieRecue:false, argentRecu:false, souhaiteMeeting:false, placesSouhaitees:1, placesAttribuees:0, transportMode:"Personnel", covoiturageAvecQui:"", placesCovoiturageOffertes:0, covoiturageElevesEmmenes:"", notes:""});
+    addEleve3eOpen = false;
+    renderSuivi3e();
+    return;
+  }
+
+  if(e.target.id==="btnPrintDashboard"){ printDashboardPDF(); return; }
+  if(e.target.id==="btnPrintClasses"){ printClassesPDF(); return; }
+  if(e.target.id==="btnPrintMeeting6e"){ printMeeting6ePDF(); return; }
+  if(e.target.id==="btnPrintSuivi3e"){ printSuivi3ePDF(); return; }
+  if(e.target.id==="btnPrintInvites"){ printInvitesPDF(); return; }
+  if(e.target.id==="btnPrintDons"){ printDonsPDF(); return; }
+
+  if(e.target.id==="btnAddInvite"){ addInviteOpen = true; renderInvites(); return; }
+  if(e.target.id==="inv-cancel"){ addInviteOpen = false; renderInvites(); return; }
+  if(e.target.id==="inv-confirm"){
+    var inm = document.getElementById("inv-nom").value.trim();
+    if(!inm) return;
+    upsertDoc("invites", {id:genId("inv"), nom:inm, qualite:document.getElementById("inv-qualite").value.trim(), placesAttribuees:Number(document.getElementById("inv-places").value)||0, notes:""});
+    addInviteOpen = false;
+    renderInvites();
+    return;
+  }
+
+  if(e.target.id==="btnAddDon"){ addDonOpen = true; renderDons(); return; }
+  if(e.target.id==="don-cancel"){ addDonOpen = false; renderDons(); return; }
+  if(e.target.id==="don-confirm"){
+    var donNom = document.getElementById("don-nom").value.trim();
+    if(!donNom) return;
+    var donType = document.getElementById("don-type").value || "Entreprise";
+    upsertDoc("dons", {id:genId("don"), nom:donNom, type:donType, papierRemis:true, reponse:"sans-reponse", montant:0, placesAttribuees:0, notes:""});
+    addDonOpen = false;
+    renderDons();
+    return;
+  }
+
+  if(e.target.id==="btnAddAtelier"){
+    state.config.ateliers.push({id:genId("at"), nom:"Nouvel atelier", lieu:"", encadrement:""});
+    writeConfig({ateliers: state.config.ateliers});
+    renderOrganisation();
+    return;
+  }
+  if(e.target.id==="btnAddSlot"){
+    state.config.hourSlots.push({id:genId("hs"), start:"08:00", durationMin:60});
+    writeConfig({hourSlots: state.config.hourSlots});
+    renderOrganisation();
+    return;
+  }
+  if(e.target.id==="btnPrintOverview"){ printOverview(); return; }
+  if(e.target.id==="btnPrintSheets"){ printSheets(); return; }
+
+  if(!t) return;
+  var act = t.getAttribute("data-act");
+
+  if(act==="rm-student"){
+    var cls = classById(t.getAttribute("data-cls"));
+    if(!cls) return;
+    cls.students = cls.students.filter(function(s){return s.id!==t.getAttribute("data-st");});
+    upsertClass(cls);
+    return;
+  }
+  if(act==="clear-examples"){
+    var clsE = classById(t.getAttribute("data-cls"));
+    if(!clsE) return;
+    clsE.students = clsE.students.filter(function(s){return !s.exemple;});
+    upsertClass(clsE);
+    return;
+  }
+  if(act==="del-class"){
+    if(confirm("Supprimer cette classe et tous ses élèves ?")) deleteClass(t.getAttribute("data-cls"));
+    return;
+  }
+  if(act==="add-student"){ addStudentOpenFor = t.getAttribute("data-cls"); csvImportOpenFor=null; renderClasses(); return; }
+  if(act==="cancel-add-student"){ addStudentOpenFor = null; renderClasses(); return; }
+  if(act==="confirm-add-student"){
+    var cid = t.getAttribute("data-cls");
+    var clsA = classById(cid);
+    var nom = document.getElementById("newStNom").value.trim();
+    var pre = document.getElementById("newStPrenom").value.trim();
+    if(!nom && !pre) return;
+    clsA.students = (clsA.students||[]).concat([{id:genId("st"), nom:titleCase(nom), prenom:titleCase(pre), meeting:defaultMeetingObj()}]);
+    upsertClass(clsA);
+    addStudentOpenFor = null;
+    renderClasses();
+    return;
+  }
+  if(act==="import-csv"){ csvImportOpenFor = t.getAttribute("data-cls"); addStudentOpenFor=null; renderClasses(); return; }
+  if(act==="csv-cancel"){ csvImportOpenFor = null; renderClasses(); return; }
+  if(act==="csv-preview"){
+    var text = document.getElementById("csvText").value;
+    var order = document.getElementById("csvOrder").value;
+    var parsed = parseCSV(text, order);
+    var prevHost = document.getElementById("csvPreviewArea");
+    if(!parsed.length){ prevHost.innerHTML = '<div class="muted" style="margin-top:8px;">Rien à importer — vérifiez le format (une ligne par élève, colonnes séparées par ; ou ,).</div>'; return; }
+    prevHost.innerHTML = '<div class="muted" style="margin:8px 0 4px;">'+parsed.length+' élève(s) détecté(s) :</div>'+
+      '<div class="table-wrap"><table><thead><tr><th>Nom</th><th>Prénom</th></tr></thead><tbody>'+
+      parsed.map(function(p){return '<tr><td>'+esc(p.nom)+'</td><td>'+esc(p.prenom)+'</td></tr>';}).join("")+
+      '</tbody></table></div>'+
+      '<button class="btn primary small" style="margin-top:8px;" data-act="csv-confirm" data-target="'+t.getAttribute("data-target")+'" data-coll="'+t.getAttribute("data-coll")+'">Importer '+parsed.length+' élève(s)</button>';
+    prevHost.dataset.parsed = JSON.stringify(parsed);
+    return;
+  }
+  if(act==="csv-confirm"){
+    var prevHost2 = document.getElementById("csvPreviewArea");
+    var parsed2 = JSON.parse(prevHost2.dataset.parsed||"[]");
+    var targetId = t.getAttribute("data-target");
+    var coll = t.getAttribute("data-coll");
+    if(coll==="classes"){
+      var clsI = classById(targetId);
+      var withMeeting = parsed2.map(function(p){ return Object.assign({}, p, {meeting:defaultMeetingObj()}); });
+      clsI.students = (clsI.students||[]).concat(withMeeting);
+      upsertClass(clsI);
+    }
+    csvImportOpenFor = null;
+    renderClasses();
+    return;
+  }
+
+  if(act==="rm-atelier"){
+    state.config.ateliers = state.config.ateliers.filter(function(a){return a.id!==t.getAttribute("data-id");});
+    writeConfig({ateliers: state.config.ateliers}); renderOrganisation(); return;
+  }
+  if(act==="rm-slot"){
+    state.config.hourSlots = state.config.hourSlots.filter(function(s){return s.id!==t.getAttribute("data-id");});
+    writeConfig({hourSlots: state.config.hourSlots}); renderOrganisation(); return;
+  }
+  if(act==="toggle-rotation"){
+    var slotId = t.getAttribute("data-slot");
+    expandedScheduleRow = (expandedScheduleRow===slotId) ? null : slotId;
+    renderScheduleTable();
+    return;
+  }
+  if(act==="auto-assign"){
+    var clsAuto = classById(t.getAttribute("data-cls"));
+    var n = state.config.ateliers.length||1;
+    var patch = {}; var gmap = {};
+    (clsAuto.students||[]).forEach(function(s, idx){ gmap[s.id] = idx % n; });
+    patch[clsAuto.id] = gmap;
+    writeSchedule({groups: patch});
+    renderScheduleTable();
+    return;
+  }
+  if(act==="del-doc"){
+    deleteDoc(t.getAttribute("data-coll"), t.getAttribute("data-id"));
+    return;
+  }
+  if(act==="toggle-bool"){
+    var coll = t.getAttribute("data-coll"), id=t.getAttribute("data-id"), field=t.getAttribute("data-field");
+    var item = state[coll].find(function(x){return x.id===id;});
+    var patch = {}; patch[field] = !item[field];
+    updateDoc(coll, id, patch);
+    if(coll==="suivi3e") renderSuivi3e(); else if(coll==="dons") renderDons();
+    return;
+  }
+  if(act==="st-toggle"){
+    var clsTg = classById(t.getAttribute("data-cls"));
+    if(!clsTg) return;
+    var stTg = (clsTg.students||[]).find(function(x){return x.id===t.getAttribute("data-st");});
+    if(!stTg) return;
+    var mTg = ensureMeeting(stTg);
+    var fieldTg = t.getAttribute("data-field");
+    updateStudentMeeting(clsTg.id, stTg.id, fieldTg, !mTg[fieldTg]);
+    renderMeeting6e(); renderDashboard();
+    return;
+  }
+});
+
+document.addEventListener("change", function(e){
+  var t = e.target;
+  if(t.getAttribute && t.getAttribute("data-act")==="assign-slot"){
+    var slotId = t.getAttribute("data-slot");
+    var val = t.value;
+    var patch = {}; patch[slotId] = val || null;
+    if(!val){
+      // remove assignment
+      delete state.schedule.assignments[slotId];
+      if(dbReady) db.doc("schedule/main").update({assignments: patch});
+      else renderAll();
+    } else {
+      writeSchedule({assignments: patch});
+    }
+    renderScheduleTable();
+    return;
+  }
+  if(t.getAttribute && t.getAttribute("data-act")==="atelier-field"){
+    var a = state.config.ateliers.find(function(x){return x.id===t.getAttribute("data-id");});
+    a[t.getAttribute("data-field")] = t.value;
+    writeConfig({ateliers: state.config.ateliers});
+    renderScheduleTable();
+    return;
+  }
+  if(t.getAttribute && t.getAttribute("data-act")==="slot-field"){
+    var s = state.config.hourSlots.find(function(x){return x.id===t.getAttribute("data-id");});
+    var f = t.getAttribute("data-field");
+    s[f] = f==="durationMin" ? Number(t.value)||60 : t.value;
+    writeConfig({hourSlots: state.config.hourSlots});
+    renderScheduleTable();
+    return;
+  }
+  if(t.getAttribute && t.getAttribute("data-act")==="move-student"){
+    var clsId = t.getAttribute("data-cls"), stId = t.getAttribute("data-st");
+    var patch = {}; var gmap = {}; gmap[stId] = Number(t.value);
+    patch[clsId] = gmap;
+    writeSchedule({groups: patch});
+    renderScheduleTable();
+    return;
+  }
+  if(t.getAttribute && t.getAttribute("data-act")==="num-field"){
+    var coll = t.getAttribute("data-coll"), id=t.getAttribute("data-id"), field=t.getAttribute("data-field");
+    var patch2 = {}; patch2[field] = Number(t.value)||0;
+    updateDoc(coll, id, patch2);
+    if(coll==="suivi3e") renderSuivi3e(); else if(coll==="invites") renderInvites(); else if(coll==="dons") renderDons();
+    renderDashboard();
+    return;
+  }
+  if(t.getAttribute && t.getAttribute("data-act")==="select-field"){
+    var collSf = t.getAttribute("data-coll"), idSf=t.getAttribute("data-id"), fieldSf=t.getAttribute("data-field");
+    var patchSf = {}; patchSf[fieldSf] = t.value;
+    updateDoc(collSf, idSf, patchSf);
+    if(collSf==="suivi3e") renderSuivi3e(); else if(collSf==="invites") renderInvites(); else if(collSf==="dons") renderDons();
+    renderDashboard();
+    return;
+  }
+  if(t.getAttribute && t.getAttribute("data-act")==="st-select"){
+    updateStudentMeeting(t.getAttribute("data-cls"), t.getAttribute("data-st"), t.getAttribute("data-field"), t.value);
+    renderMeeting6e(); renderDashboard();
+    return;
+  }
+  if(t.getAttribute && t.getAttribute("data-act")==="st-num"){
+    updateStudentMeeting(t.getAttribute("data-cls"), t.getAttribute("data-st"), t.getAttribute("data-field"), Number(t.value)||0);
+    renderMeeting6e(); renderDashboard();
+    return;
+  }
+  if(t.id==="capacityInput"){
+    writeConfig({totalMeetingCapacity: Number(t.value)||0});
+    renderDashboard();
+    return;
+  }
+});
+
+var debouncedTextWrite = debounce(function(coll, id, field, value){
+  var patch = {}; patch[field] = value;
+  updateDoc(coll, id, patch);
+}, 500);
+
+var debouncedStudentText = debounce(function(clsId, stId, field, value){
+  updateStudentMeeting(clsId, stId, field, value);
+}, 500);
+
+document.addEventListener("input", function(e){
+  var t = e.target;
+  if(t.getAttribute && t.getAttribute("data-act")==="text-field"){
+    debouncedTextWrite(t.getAttribute("data-coll"), t.getAttribute("data-id"), t.getAttribute("data-field"), t.value);
+  }
+  if(t.getAttribute && t.getAttribute("data-act")==="st-text"){
+    debouncedStudentText(t.getAttribute("data-cls"), t.getAttribute("data-st"), t.getAttribute("data-field"), t.value);
+  }
+});
+
+document.getElementById("fileImportData").addEventListener("change", function(e){
+  var file = e.target.files && e.target.files[0];
+  if(file) importDataFromFile(file);
+  e.target.value = "";
+});
+
+/* ============================================================
+   CSV PARSING
+   ============================================================ */
+function parseCSV(text, order){
+  var lines = String(text||"").split(/\r?\n/).map(function(l){return l.trim();}).filter(function(l){return l.length;});
+  if(!lines.length) return [];
+  var delim = lines[0].indexOf(";")>=0 ? ";" : (lines[0].indexOf("\t")>=0 ? "\t" : ",");
+  var rows = lines.map(function(l){ return l.split(delim).map(function(c){ return c.trim().replace(/^"|"$/g,""); }); });
+  var headerLike = /nom|pr[ée]nom|first|last|classe/i;
+  if(rows[0].some(function(c){return headerLike.test(c);})) rows = rows.slice(1);
+  var out = [];
+  rows.forEach(function(cols){
+    if(!cols.length || !cols[0]) return;
+    var nom, prenom;
+    if(cols.length>=2 && cols[1]){
+      if(order==="prenom-nom"){ prenom=cols[0]; nom=cols[1]; } else { nom=cols[0]; prenom=cols[1]; }
+    } else {
+      var parts = cols[0].split(/\s+/);
+      if(parts.length>1){ nom = parts[parts.length-1]; prenom = parts.slice(0,-1).join(" "); }
+      else { nom = cols[0]; prenom = ""; }
+    }
+    out.push({id:genId("st"), nom:titleCase(nom||""), prenom:titleCase(prenom||"")});
+  });
+  return out;
+}
+
+/* ============================================================
+   PRINT
+   ============================================================ */
+function printOverview(){
+  var slots = sortedSlots();
+  var rows = slots.map(function(slot){
+    var cls = classById(state.schedule.assignments[slot.id]);
+    return '<tr><td>'+fmtRange(slot.start, slot.durationMin)+'</td><td>'+(cls?esc(cls.nom):"—")+'</td><td>'+(cls?nbStudents(cls):"—")+'</td></tr>';
+  }).join("");
+  var html = '<div class="print-page">'+
+    '<div class="print-head"><h2>Organisation du jour J — vue d\'ensemble</h2><div class="meta">Collège Pasteur — Villemomble · Initiation au saut à la perche</div></div>'+
+    '<table class="print-table"><thead><tr><th>Créneau</th><th>Classe</th><th>Élèves</th></tr></thead><tbody>'+rows+'</tbody></table>'+
+  '</div>';
+  document.getElementById("print-root").innerHTML = html;
+  window.print();
+}
+
+function printSheets(){
+  var slots = sortedSlots().filter(function(s){ return state.schedule.assignments[s.id]; });
+  if(!slots.length){ alert("Aucune classe n'est encore affectée à un créneau."); return; }
+  var pages = slots.map(function(slot){
+    var cls = classById(state.schedule.assignments[slot.id]);
+    var gi = groupsForClass(cls);
+    var ateliers = state.config.ateliers;
+    var n = ateliers.length||1;
+    var subDur = Math.round((slot.durationMin||60)/n);
+    var t = timeToMin(slot.start);
+    var periods = [];
+    for(var i=0;i<n;i++){ periods.push({start:t,end:t+subDur}); t+=subDur; }
+    var head = '<tr><th>Groupe</th>'+periods.map(function(p){return '<th>'+fmtMin(p.start)+'–'+fmtMin(p.end)+'</th>';}).join("")+'</tr>';
+    var body = "";
+    for(var g=0; g<n; g++){
+      body += '<tr><td><strong>Groupe '+(g+1)+'</strong></td>';
+      for(var p=0;p<n;p++){ body += '<td>'+esc(ateliers[(g+p)%n].nom)+'</td>'; }
+      body += '</tr>';
+    }
+    var groupCards = Array.from({length:n}).map(function(_,g){
+      var names = gi.groups[g].map(function(s){return esc(s.prenom+" "+s.nom);}).join(", ") || "—";
+      return '<div class="print-group"><h4>Groupe '+(g+1)+'</h4>'+names+'</div>';
+    }).join("");
+    return '<div class="print-page">'+
+      '<div class="print-head"><h2>'+esc(cls.nom)+' — '+fmtRange(slot.start, slot.durationMin)+'</h2><div class="meta">Collège Pasteur — Villemomble · '+nbStudents(cls)+' élèves</div></div>'+
+      '<table class="print-table">'+head+body+'</table>'+
+      '<div class="print-groups">'+groupCards+'</div>'+
+    '</div>';
+  }).join("");
+  document.getElementById("print-root").innerHTML = pages;
+  window.print();
+}
+
+function printDashboardPDF(){
+  var cap = Number(state.config.totalMeetingCapacity)||0;
+  var attr = totalAttribuees();
+  var dem = totalDemandees();
+  var rows = '<tr><td>Capacité totale</td><td>'+(cap||"à définir")+'</td></tr>'+
+    '<tr><td>Places demandées</td><td>'+dem+'</td></tr>'+
+    '<tr><td>Places attribuées</td><td>'+attr.total+'</td></tr>'+
+    '<tr><td>&nbsp;&nbsp;dont 6ème</td><td>'+attr.sixieme+'</td></tr>'+
+    '<tr><td>&nbsp;&nbsp;dont 3ème</td><td>'+attr.troisieme+'</td></tr>'+
+    '<tr><td>&nbsp;&nbsp;dont invités</td><td>'+attr.invites+'</td></tr>'+
+    '<tr><td>&nbsp;&nbsp;dont dons &amp; mécénat</td><td>'+attr.dons+'</td></tr>'+
+    '<tr><td>Places restantes</td><td>'+(cap ? (cap-attr.total) : "—")+'</td></tr>';
+  var html = '<div class="print-page">'+
+    '<div class="print-head"><h2>Tableau de bord — Perche aux Étoiles</h2><div class="meta">Collège Pasteur — Villemomble · '+new Date().toLocaleDateString('fr-FR')+'</div></div>'+
+    '<table class="print-table" style="max-width:420px;"><tbody>'+rows+'</tbody></table>'+
+  '</div>';
+  document.getElementById("print-root").innerHTML = html;
+  window.print();
+}
+
+function printClassesPDF(){
+  var classes6 = state.classes.filter(function(c){return c.niveau==="6e";}).sort(function(a,b){return a.nom.localeCompare(b.nom);});
+  if(!classes6.length){ alert("Aucune classe à exporter."); return; }
+  var pages = classes6.map(function(cls){
+    var students = (cls.students||[]).slice().sort(function(a,b){return (a.nom||"").localeCompare(b.nom||"");});
+    var rows = students.map(function(s){ return '<tr><td>'+esc(s.nom)+'</td><td>'+esc(s.prenom)+'</td></tr>'; }).join("");
+    return '<div class="print-page">'+
+      '<div class="print-head"><h2>'+esc(cls.nom)+'</h2><div class="meta">Collège Pasteur — Villemomble · '+students.length+' élève(s)</div></div>'+
+      '<table class="print-table" style="max-width:420px;"><thead><tr><th>Nom</th><th>Prénom</th></tr></thead><tbody>'+(rows||'<tr><td colspan="2">Aucun élève</td></tr>')+'</tbody></table>'+
+    '</div>';
+  }).join("");
+  document.getElementById("print-root").innerHTML = pages;
+  window.print();
+}
+
+function printMeeting6ePDF(){
+  var classes6 = state.classes.filter(function(c){return c.niveau==="6e";}).sort(function(a,b){return a.nom.localeCompare(b.nom);});
+  if(!classes6.length){ alert("Aucune classe à exporter."); return; }
+  var legend = '<div class="print-legend">'+
+    '<span><i style="background:#fff;"></i>Ne demande pas</span>'+
+    '<span><i style="background:#DCEBF7;"></i>En attente d\'attribution</span>'+
+    '<span><i style="background:#FBF0C7;"></i>Attribution partielle</span>'+
+    '<span><i style="background:#DFF3E3;"></i>Attribution complète</span>'+
+  '</div>';
+  var pages = classes6.map(function(cls){
+    var students = (cls.students||[]).slice().sort(function(a,b){return (a.nom||"").localeCompare(b.nom||"");});
+    var rows = students.map(function(s){
+      var m = ensureMeeting(s);
+      var status = meetingStatus(m);
+      return '<tr class="status-'+status+'"><td>'+esc(s.nom)+'</td><td>'+esc(s.prenom)+'</td>'+
+        '<td>'+(m.feuilleRendue?"Rendue":"En attente")+'</td>'+
+        '<td>'+(m.reponse==="oui"?"Oui":(m.reponse==="non"?"Non":"—"))+'</td>'+
+        '<td>'+(m.reponse==="oui"?(Number(m.placesSouhaitees)||0):"—")+'</td>'+
+        '<td>'+esc(transportSummaryText(m))+'</td>'+
+        '<td>'+(Number(m.placesAttribuees)||0)+'</td>'+
+        '<td>'+esc(m.numerosPlaces||"—")+'</td>'+
+      '</tr>';
+    }).join("");
+    return '<div class="print-page">'+
+      '<div class="print-head"><h2>Meeting — '+esc(cls.nom)+'</h2><div class="meta">Collège Pasteur — Villemomble</div></div>'+
+      legend+
+      '<table class="print-table"><thead><tr><th>Nom</th><th>Prénom</th><th>Feuille</th><th>Vient</th><th>Souh.</th><th>Transport</th><th>Attr.</th><th>N° places</th></tr></thead><tbody>'+
+      (rows||'<tr><td colspan="8">Aucun élève</td></tr>')+
+      '</tbody></table>'+
+    '</div>';
+  }).join("");
+  document.getElementById("print-root").innerHTML = pages;
+  window.print();
+}
+
+function printSuivi3ePDF(){
+  var rows = state.suivi3e.slice().sort(function(a,b){return (a.nom||"").localeCompare(b.nom||"");}).map(function(e){
+    return '<tr><td>'+esc(e.nom)+'</td><td>'+esc(e.prenom)+'</td><td>'+esc(e.classe||"—")+'</td>'+
+      '<td>'+(e.autorisationSortieRecue?"Reçue":"En attente")+'</td>'+
+      '<td>'+(e.argentRecu?"Reçu":"En attente")+'</td>'+
+      '<td>'+(e.souhaiteMeeting?"Oui":"Non")+'</td>'+
+      '<td>'+(e.souhaiteMeeting?(Number(e.placesSouhaitees)||0):"—")+'</td>'+
+      '<td>'+(e.souhaiteMeeting?esc(transportSummaryText(e)):"—")+'</td>'+
+      '<td>'+(Number(e.placesAttribuees)||0)+'</td>'+
+    '</tr>';
+  }).join("");
+  var html = '<div class="print-page">'+
+    '<div class="print-head"><h2>Sortie &amp; meeting — 3ème</h2><div class="meta">Collège Pasteur — Villemomble · '+state.suivi3e.length+' élève(s)</div></div>'+
+    '<table class="print-table"><thead><tr><th>Nom</th><th>Prénom</th><th>Classe</th><th>Autorisation</th><th>Argent</th><th>Meeting</th><th>Souh.</th><th>Transport</th><th>Attr.</th></tr></thead><tbody>'+
+    (rows||'<tr><td colspan="9">Aucun élève</td></tr>')+
+    '</tbody></table>'+
+  '</div>';
+  document.getElementById("print-root").innerHTML = html;
+  window.print();
+}
+
+function printInvitesPDF(){
+  var rows = state.invites.slice().sort(function(a,b){return (a.nom||"").localeCompare(b.nom||"");}).map(function(i){
+    return '<tr><td>'+esc(i.nom)+'</td><td>'+esc(i.qualite||"—")+'</td><td>'+(Number(i.placesAttribuees)||0)+'</td></tr>';
+  }).join("");
+  var html = '<div class="print-page">'+
+    '<div class="print-head"><h2>Invités hors-classe</h2><div class="meta">Collège Pasteur — Villemomble</div></div>'+
+    '<table class="print-table" style="max-width:520px;"><thead><tr><th>Nom</th><th>Qualité</th><th>Places attribuées</th></tr></thead><tbody>'+
+    (rows||'<tr><td colspan="3">Aucun invité</td></tr>')+
+    '</tbody></table>'+
+  '</div>';
+  document.getElementById("print-root").innerHTML = html;
+  window.print();
+}
+
+function printDonsPDF(){
+  var rows = state.dons.slice().sort(function(a,b){return (a.nom||"").localeCompare(b.nom||"");}).map(function(d){
+    var reponseTxt = d.reponse==="oui" ? "Oui" : (d.reponse==="non" ? "Non" : "—");
+    return '<tr><td>'+esc(d.nom)+'</td><td>'+esc(d.type||"Entreprise")+'</td><td>'+(d.papierRemis?"Remis":"Non remis")+'</td><td>'+reponseTxt+'</td>'+
+      '<td>'+(d.reponse==="oui"?(Number(d.montant)||0)+" €":"—")+'</td>'+
+      '<td>'+(d.reponse==="oui"?(Number(d.placesAttribuees)||0):"—")+'</td></tr>';
+  }).join("");
+  var totalMontant = state.dons.reduce(function(s,d){return s+(d.reponse==="oui"?(Number(d.montant)||0):0);},0);
+  var totalPlaces = state.dons.reduce(function(s,d){return s+(d.reponse==="oui"?(Number(d.placesAttribuees)||0):0);},0);
+  var html = '<div class="print-page">'+
+    '<div class="print-head"><h2>Dons &amp; mécénat</h2><div class="meta">Collège Pasteur — Villemomble · '+state.dons.length+' démarché(s)</div></div>'+
+    '<table class="print-table" style="max-width:700px;"><thead><tr><th>Nom</th><th>Type</th><th>Papier remis</th><th>Retour</th><th>Montant</th><th>Places attr.</th></tr></thead><tbody>'+
+    (rows||'<tr><td colspan="6">Aucune sollicitation</td></tr>')+
+    '<tr><td colspan="4" class="right" style="font-weight:700;">Total</td><td style="font-weight:700;">'+totalMontant+' €</td><td style="font-weight:700;">'+totalPlaces+'</td></tr>'+
+    '</tbody></table>'+
+  '</div>';
+  document.getElementById("print-root").innerHTML = html;
+  window.print();
+}
+
+/* ============================================================
+   HOT RELOAD SNAPSHOT (for viewers with unsaved local edits)
+   ============================================================ */
+function start(){
+  initDb();
+}
+if(window.claude && window.claude.hot && window.claude.hot.ready){
+  window.claude.hot.ready(start);
+} else {
+  start();
+}
+
+})();
+</script>
